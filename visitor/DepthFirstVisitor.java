@@ -4,6 +4,7 @@
 
 package visitor;
 import syntaxtree.*;
+import symboltable.*;
 import java.util.*;
 
 /**
@@ -11,6 +12,16 @@ import java.util.*;
  * order.  Your visitors may extend this class.
  */
 public class DepthFirstVisitor implements Visitor {
+
+   private static int BOOLEAN_TYPE = 1;
+   private static int INTEGER_TYPE = 2;
+   private static int CLASS_TYPE   = 3;
+
+
+   ArrayList<ClassSymbol> symbolTable = new ArrayList<ClassSymbol> ();
+   ClassSymbol  current = null;
+   MethodSymbol curFunc = null;
+
    //
    // Auto class visitors--probably don't need to be overridden.
    //
@@ -50,6 +61,8 @@ public class DepthFirstVisitor implements Visitor {
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
+
+      ClassSymbol.printSymbolTable(this.symbolTable);
    }
 
    /**
@@ -73,6 +86,12 @@ public class DepthFirstVisitor implements Visitor {
     * f17 -> "}"
     */
    public void visit(MainClass n) {
+
+      ClassSymbol c = new ClassSymbol();
+      c.className = n.f1.f0.tokenImage;
+      symbolTable.add(c);
+      this.current = c;
+      
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -93,8 +112,7 @@ public class DepthFirstVisitor implements Visitor {
       n.f17.accept(this);
    }
 
-   /**
-    * f0 -> ClassDeclaration()
+   /** * f0 -> ClassDeclaration()
     *       | ClassExtendsDeclaration()
     */
    public void visit(TypeDeclaration n) {
@@ -110,6 +128,12 @@ public class DepthFirstVisitor implements Visitor {
     * f5 -> "}"
     */
    public void visit(ClassDeclaration n) {
+      
+      ClassSymbol c = new ClassSymbol();
+      c.className = n.f1.f0.tokenImage;
+      symbolTable.add(c);
+      this.current = c;
+
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -129,7 +153,13 @@ public class DepthFirstVisitor implements Visitor {
     * f7 -> "}"
     */
    public void visit(ClassExtendsDeclaration n) {
-      
+
+      ClassSymbol c = new ClassSymbol();
+      c.className = n.f1.f0.tokenImage;
+      c.extendsClassName = n.f3.f0.tokenImage;
+      symbolTable.add(c);
+      this.current = c;
+
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -146,6 +176,15 @@ public class DepthFirstVisitor implements Visitor {
     * f2 -> ";"
     */
    public void visit(VarDeclaration n) {
+
+      if(this.curFunc == null) {
+        //we are currently NOT in a function
+        this.current.addClassVariable(n.f1.f0.tokenImage, n.f0.f0.which);
+      } else {
+        //we are in a function
+        this.curFunc.addLocalVariable(n.f1.f0.tokenImage, n.f0.f0.which);
+      }
+
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -167,6 +206,15 @@ public class DepthFirstVisitor implements Visitor {
     * f12 -> "}"
     */
    public void visit(MethodDeclaration n) {
+
+      assert(this.current != null && this.curFunc == null);
+      String methodName   = n.f2.f0.tokenImage;
+      int retType         = n.f1.f0.which;
+      // we entered a function
+      this.curFunc = this.current.addClassMethod(methodName, retType);
+
+      System.out.println(n.f1.f0.choice + " RET: " + retType);
+
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -180,6 +228,9 @@ public class DepthFirstVisitor implements Visitor {
       n.f10.accept(this);
       n.f11.accept(this);
       n.f12.accept(this);
+
+      // we exited a function
+      this.curFunc = null;
    }
 
    /**

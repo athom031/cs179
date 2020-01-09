@@ -3,7 +3,7 @@ package symboltable;
 import java.util.ArrayList;
 import java.lang.StringBuilder;
 
-class ClassSymbol {
+public class ClassSymbol {
 
     public String className;        // the name of the class
     public String extendsClassName; // the class that the current class inherits from
@@ -13,7 +13,7 @@ class ClassSymbol {
     public static void printSymbolTable(ArrayList<ClassSymbol> symbolTable) {
         StringBuilder sb = new StringBuilder(512);
         for(ClassSymbol c : symbolTable) {
-            sb.append(String.format("class %s {\n", c.className));
+            sb.append(String.format("class %s : %s {\n", c.className, c.extendsClassName));
             for(VariableSymbol v : c.variableSymbols) {
                 sb.append(String.format("    var %s\n", v.varName));
             }
@@ -24,7 +24,7 @@ class ClassSymbol {
                 }
                 sb.append("    }\n");
             }
-            sb.append('}');
+            sb.append("};\n");
         }
         System.out.println(sb.toString());
     }
@@ -35,18 +35,20 @@ class ClassSymbol {
         return this.className;
     }
 
-    public void addClassVariable(String varName, int varType) {
+    public VariableSymbol addClassVariable(String varName, int varType) {
         VariableSymbol v = new VariableSymbol();
         v.varName = varName;
         v.varType = varType;
         variableSymbols.add(v);
+        return v;
     }
 
-    public void addClassMethod(String methodName, int retType) {
+    public MethodSymbol addClassMethod(String methodName, int retType) {
         MethodSymbol m = new MethodSymbol();
         m.methodName = methodName;
         m.retType = retType;
         methodSymbols.add(m);
+        return m;
     }
 
     public boolean hasVariable(String varName) {
@@ -78,49 +80,3 @@ class ClassSymbol {
     }
 
 }
-
-class VariableSymbol {
-    
-    public String varName;        // the name of the variable
-    public int    varType;        // the type of the variable
-
-    @Override
-    public String toString() {
-        return this.varName;
-    }
-}
-
-class MethodSymbol {
-
-    public String methodName;    // the method name
-    public int    retType;       // the return value of the function
-    public ArrayList<VariableSymbol> variableSymbols = new ArrayList<VariableSymbol>();
-
-    @Override
-    public String toString() {
-        return this.methodName;
-    }
-
-    public void addLocalVariable(String varName, int varType) {
-        VariableSymbol v = new VariableSymbol();
-        v.varName = varName;
-        v.varType = varType;
-        variableSymbols.add(v);
-    }
-
-    public boolean hasVariable(String varName) {
-        for(VariableSymbol v : variableSymbols) {
-            if(v.varName == varName) return true;
-        }
-        return false;
-    }
-
-    public boolean hasVariable(String varName, int type) {
-        for(VariableSymbol v : variableSymbols) {
-            if(v.varName == varName && v.varType == type) return true;
-        }
-        return false;
-    }
-
-}
-
