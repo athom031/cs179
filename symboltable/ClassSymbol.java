@@ -5,6 +5,11 @@ import java.lang.StringBuilder;
 
 public class ClassSymbol {
 
+    private static final int BOOLEAN_TYPE = 1;
+    private static final int INTEGER_TYPE = 2;
+    private static final int CLASS_TYPE   = 3;
+
+
     public String className;        // the name of the class
     public String extendsClassName; // the class that the current class inherits from
     public ArrayList<VariableSymbol> variableSymbols = new ArrayList<VariableSymbol>();
@@ -15,12 +20,12 @@ public class ClassSymbol {
         for(ClassSymbol c : symbolTable) {
             sb.append(String.format("class %s : %s {\n", c.className, c.extendsClassName));
             for(VariableSymbol v : c.variableSymbols) {
-                sb.append(String.format("    var %s\n", v.varName));
+                sb.append(String.format("    %s %s\n", ClassSymbol.type(v.varType), v.varName));
             }
             for(MethodSymbol m : c.methodSymbols) {
-                sb.append(String.format("    func %s {\n", m.methodName));
+                sb.append(String.format("    func %s -> %s {\n", m.methodName, ClassSymbol.type(m.retType)));
                 for(VariableSymbol mVar : m.variableSymbols) {
-                    sb.append(String.format("        func_var %s\n", mVar.varName));
+                    sb.append(String.format("        %s %s\n", ClassSymbol.type(mVar.varType), mVar.varName));
                 }
                 sb.append("    }\n");
             }
@@ -29,6 +34,14 @@ public class ClassSymbol {
         System.out.println(sb.toString());
     }
 
+    static String type(int a) {
+       switch(a) {
+       case BOOLEAN_TYPE: return "boolean";
+       case INTEGER_TYPE: return "integer";
+       case CLASS_TYPE:   return "other";
+       default: return "unknown";
+       }
+    }
 
     @Override
     public String toString() {
