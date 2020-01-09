@@ -129,6 +129,7 @@ public class DepthFirstVisitor implements Visitor {
     * f7 -> "}"
     */
    public void visit(ClassExtendsDeclaration n) {
+      
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
