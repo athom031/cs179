@@ -7,10 +7,10 @@ javacc:
 	javacc jtb.out.jj
 
 test:
-	./run_tests.sh
+	sh run_tests.sh
 clean:
 	rm *.class
 	rm visitor/*.class
 	rm syntaxtree/*.class
-
+	rm symboltable/*.class
 

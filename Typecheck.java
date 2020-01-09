@@ -1,5 +1,4 @@
 import syntaxtree.Goal;
-import visitor.DepthFirstVisitor;
 
 public class Typecheck {
 
@@ -8,8 +7,8 @@ public class Typecheck {
             // Initialize the parser, and parse the program
             MiniJavaParser parser = new MiniJavaParser(System.in);
             Goal goal = MiniJavaParser.Goal();
-            DepthFirstVisitor depthFirstVisitor = new DepthFirstVisitor();
-            depthFirstVisitor.visit(goal);
+            //TypecheckVisitor typecheck = new TypecheckVisitor();
+            //typecheck.visit(goal);
 
         } catch(ParseException p) {
             System.out.println("Parse Error");
