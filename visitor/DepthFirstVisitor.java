@@ -62,7 +62,7 @@ public class DepthFirstVisitor implements Visitor {
       n.f1.accept(this);
       n.f2.accept(this);
 
-      ClassSymbol.printSymbolTable(this.symbolTable);
+      // ClassSymbol.printSymbolTable(this.symbolTable);
    }
 
    /**
@@ -213,8 +213,6 @@ public class DepthFirstVisitor implements Visitor {
       // we entered a function
       this.curFunc = this.current.addClassMethod(methodName, retType);
 
-      System.out.println(n.f1.f0.choice + " RET: " + retType);
-
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -247,6 +245,12 @@ public class DepthFirstVisitor implements Visitor {
     * f1 -> Identifier()
     */
    public void visit(FormalParameter n) {
+      // visited a function parameter
+      assert(this.curFunc != null && this.current != null);
+      int type = n.f0.f0.which;
+      String name = n.f1.f0.tokenImage;
+      this.curFunc.addParameter(name, type);
+
       n.f0.accept(this);
       n.f1.accept(this);
    }

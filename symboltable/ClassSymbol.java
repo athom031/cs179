@@ -24,6 +24,12 @@ public class ClassSymbol {
             }
             for(MethodSymbol m : c.methodSymbols) {
                 sb.append(String.format("    func %s -> %s {\n", m.methodName, ClassSymbol.type(m.retType)));
+
+                for(VariableSymbol param : m.parameters) {
+                    sb.append(String.format("        %s %s [parameter]\n", ClassSymbol.type(param.varType), param.varName));
+                }
+
+
                 for(VariableSymbol mVar : m.variableSymbols) {
                     sb.append(String.format("        %s %s\n", ClassSymbol.type(mVar.varType), mVar.varName));
                 }
