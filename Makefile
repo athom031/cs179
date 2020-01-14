@@ -1,4 +1,4 @@
-FILE = ifs.java
+FILE = print.java
 
 run:
 	javac Typecheck.java

@@ -388,10 +388,7 @@ public class DepthFirstVisitor implements Visitor {
    public void visit(IfStatement n) {
 
       //TODO: figure out whether the expression "f2" is a boolean expr
-      //System.out.println("IF " + n.f2 + " " + n.f2.f0 + " " + n.f2.f0.which + " " + n.f2.f0.choice);
-
       int exprType = n.f2.f0.which;
-      Object  c    = n.f2.f0.choice;
       switch(exprType) {
       case 0: // && is a boolean expression, so it's okay
         break;
@@ -414,6 +411,7 @@ public class DepthFirstVisitor implements Visitor {
         break;
       case 7: // a.methodCall(b, c, d)
         // TODO: check the method call for type.
+        
         break;
       case 8: // primary expression
         break;
@@ -441,6 +439,37 @@ public class DepthFirstVisitor implements Visitor {
 
      //TODO: figure out whether the expression "f2" is a boolean expr
 
+      int exprType = n.f2.f0.which;
+      switch(exprType) {
+      case 0: // && is a boolean expression, so it's okay
+        break;
+      case 1: // < is a boolean expression, so it's okay
+        break;
+      case 2: // + is a integer expression, so it's not okay
+        checkValue = false;
+        break;
+      case 3: // - is a integer expression, so it's not okay
+        checkValue = false;
+        break;
+      case 4: // * is a integer expression, so it's not okay
+        checkValue = false;
+        break;
+      case 5: // a[i] is a integer expression, so it's not okay
+        checkValue = false;
+        break;
+      case 6: // a.length  is a integer expression, so it's not okay
+        checkValue = false;
+        break;
+      case 7: // a.methodCall(b, c, d)
+        // TODO: check the method call for type.
+        
+        break;
+      case 8: // primary expression
+        break;
+      default:
+        break;
+      }
+
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -458,7 +487,33 @@ public class DepthFirstVisitor implements Visitor {
    public void visit(PrintStatement n) {
 
       //TODO: print statement can ONLY print integers
-
+      int exprType = n.f2.f0.which;
+      switch(exprType) {
+      case 0: // && 
+        checkValue = false;
+        break;
+      case 1: // < 
+        checkValue = false;
+        break;
+      case 2: // +  is integer
+        break;
+      case 3: // -  is integer
+        break;
+      case 4: // *  is integer
+        break;
+      case 5: // a[i]  is integer
+        break;
+      case 6: // a.length is integer
+        break;
+      case 7: // a.methodCall(b, c, d)
+        // TODO: check the method call for type.
+        
+        break;
+      case 8: // primary expression
+        break;
+      default:
+        break;
+      }
 
       n.f0.accept(this);
       n.f1.accept(this);
