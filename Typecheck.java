@@ -10,7 +10,11 @@ public class Typecheck {
             Goal goal = MiniJavaParser.Goal();
             DepthFirstVisitor visitor = new DepthFirstVisitor();
             visitor.visit(goal);
-
+            if(visitor.check()) {
+                System.out.println("Program type checked successfully");
+            } else {
+                System.out.println("Type error");
+            }
         } catch(ParseException p) {
             System.out.println("Parse Error");
             p.printStackTrace();

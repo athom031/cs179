@@ -22,6 +22,13 @@ public class DepthFirstVisitor implements Visitor {
    ClassSymbol  current = null;
    MethodSymbol curFunc = null;
 
+   boolean checkValue = true;
+
+   public boolean check() {
+       return checkValue;
+   }
+
+
    //
    // Auto class visitors--probably don't need to be overridden.
    //
@@ -62,7 +69,7 @@ public class DepthFirstVisitor implements Visitor {
       n.f1.accept(this);
       n.f2.accept(this);
 
-      ClassSymbol.printSymbolTable(this.symbolTable);
+      //ClassSymbol.printSymbolTable(this.symbolTable);
    }
 
    /**
@@ -379,6 +386,11 @@ public class DepthFirstVisitor implements Visitor {
     * f6 -> Statement()
     */
    public void visit(IfStatement n) {
+
+      //TODO: figure out whether the expression "f2" is a boolean expr
+      System.out.println("IF " + n.f2 + " " + n.f2.f0 + " " + n.f2.f0.which + " " + n.f2.f0.choice);
+      
+
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -396,6 +408,9 @@ public class DepthFirstVisitor implements Visitor {
     * f4 -> Statement()
     */
    public void visit(WhileStatement n) {
+
+     //TODO: figure out whether the expression "f2" is a boolean expr
+
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -411,6 +426,10 @@ public class DepthFirstVisitor implements Visitor {
     * f4 -> ";"
     */
    public void visit(PrintStatement n) {
+
+      //TODO: print statement can ONLY print integers
+
+
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
