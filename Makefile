@@ -1,6 +1,8 @@
+FILE = ifs.java
+
 run:
 	javac Typecheck.java
-	java Typecheck < phase1-tests/Basic.java
+	java Typecheck < phase1-tests/$(FILE)
 
 javacc:
 	java -jar jtb.jar minijava.jj
