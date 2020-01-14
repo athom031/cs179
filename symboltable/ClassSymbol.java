@@ -8,6 +8,7 @@ public class ClassSymbol {
     private static final int BOOLEAN_TYPE = 1;
     private static final int INTEGER_TYPE = 2;
     private static final int CLASS_TYPE   = 3;
+    private static final int VOID_TYPE    = 4;
 
 
     public String className;        // the name of the class
@@ -45,6 +46,7 @@ public class ClassSymbol {
        case BOOLEAN_TYPE: return "boolean";
        case INTEGER_TYPE: return "integer";
        case CLASS_TYPE:   return "other";
+       case VOID_TYPE:    return "void";
        default: return "unknown";
        }
     }

@@ -16,7 +16,7 @@ public class DepthFirstVisitor implements Visitor {
    private static int BOOLEAN_TYPE = 1;
    private static int INTEGER_TYPE = 2;
    private static int CLASS_TYPE   = 3;
-
+   private static int VOID_TYPE    = 4;
 
    ArrayList<ClassSymbol> symbolTable = new ArrayList<ClassSymbol> ();
    ClassSymbol  current = null;
@@ -62,7 +62,7 @@ public class DepthFirstVisitor implements Visitor {
       n.f1.accept(this);
       n.f2.accept(this);
 
-      // ClassSymbol.printSymbolTable(this.symbolTable);
+      ClassSymbol.printSymbolTable(this.symbolTable);
    }
 
    /**
@@ -90,7 +90,12 @@ public class DepthFirstVisitor implements Visitor {
       ClassSymbol c = new ClassSymbol();
       c.className = n.f1.f0.tokenImage;
       symbolTable.add(c);
+
+      MethodSymbol m = c.addClassMethod("main", VOID_TYPE);
+      m.addParameter(n.f11.f0.tokenImage, 5);
+
       this.current = c;
+      this.curFunc = m;
       
       n.f0.accept(this);
       n.f1.accept(this);
@@ -110,6 +115,9 @@ public class DepthFirstVisitor implements Visitor {
       n.f15.accept(this);
       n.f16.accept(this);
       n.f17.accept(this);
+
+      this.current = null;
+      this.curFunc = null;
    }
 
    /** * f0 -> ClassDeclaration()
@@ -317,6 +325,7 @@ public class DepthFirstVisitor implements Visitor {
     * f2 -> "}"
     */
    public void visit(Block n) {
+      //TODO: put code here...
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -329,6 +338,9 @@ public class DepthFirstVisitor implements Visitor {
     * f3 -> ";"
     */
    public void visit(AssignmentStatement n) {
+
+      //TODO: put code here...
+
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -345,6 +357,9 @@ public class DepthFirstVisitor implements Visitor {
     * f6 -> ";"
     */
    public void visit(ArrayAssignmentStatement n) {
+
+      //TODO: put code here...
+
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
