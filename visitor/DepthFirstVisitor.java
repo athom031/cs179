@@ -537,12 +537,99 @@ public class DepthFirstVisitor implements Visitor {
       n.f0.accept(this);
    }
 
+   void checkForBooleanType(PrimaryExpression p) {
+      assert(current != null && curFunc != null);
+      int exprType = p.f0.which;
+      switch(exprType) {
+
+      case 0: // INTEGER LITERAL
+        checkValue = false;
+        break;
+      case 1: // TRUE
+        break;
+      case 2: // FALSE
+        break;
+      case 3: { // IDENTIFIER
+        Identifier i = (Identifier) p.f0.choice;
+        String name = i.f0.tokenImage;
+        if(current.hasVariable(name, BOOLEAN_TYPE))
+            checkValue = false;
+        else if(curFunc.hasVariable(name, BOOLEAN_TYPE))
+            checkValue = false;
+        break;
+      }
+      case 4: // THIS EXPRESSION
+        checkValue = false;
+        break;
+      case 5: // ARRAY_ALLOCATION_EXPRESSION
+        checkValue = false;
+        break;
+      case 6: // ALLOCATION EXPRESSION
+        checkValue = false;
+        break;
+      case 7: // NOT EXPRESSION
+        break;
+      case 8: // BRACKET EXPRESSION
+        break;
+      default:
+        assert(false);//should not happen!
+      }
+   }
+
+
+   void checkForIntegerType(PrimaryExpression p) {
+      assert(current != null && curFunc != null);
+      int exprType = p.f0.which;
+      switch(exprType) {
+
+      case 0: // INTEGER LITERAL
+        break;
+      case 1: // TRUE
+        checkValue = false;
+        break;
+      case 2: // FALSE
+        checkValue = false;
+        break;
+      case 3: { // IDENTIFIER
+        Identifier i = (Identifier) p.f0.choice;
+        String name = i.f0.tokenImage;
+        if(current.hasVariable(name, INTEGER_TYPE))
+            checkValue = false;
+        else if(curFunc.hasVariable(name, INTEGER_TYPE))
+            checkValue = false;
+        break;
+      }
+      case 4: // THIS EXPRESSION
+        checkValue = false;
+        break;
+      case 5: // ARRAY_ALLOCATION_EXPRESSION
+        checkValue = false;
+        break;
+      case 6: // ALLOCATION EXPRESSION
+        checkValue = false;
+        break;
+      case 7: // NOT EXPRESSION
+        checkValue = false;
+        break;
+      case 8: // BRACKET EXPRESSION
+        break;
+      default:
+        assert(false);//should not happen!
+      }
+   }
+
+
+
    /**
     * f0 -> PrimaryExpression()
     * f1 -> "&&"
     * f2 -> PrimaryExpression()
     */
+
    public void visit(AndExpression n) {
+      // TODO: AND EXPR
+      checkForBooleanType(n.f0);
+      checkForBooleanType(n.f2);
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -554,6 +641,8 @@ public class DepthFirstVisitor implements Visitor {
     * f2 -> PrimaryExpression()
     */
    public void visit(CompareExpression n) {
+      checkForIntegerType(n.f0);
+      checkForIntegerType(n.f2);
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -565,6 +654,8 @@ public class DepthFirstVisitor implements Visitor {
     * f2 -> PrimaryExpression()
     */
    public void visit(PlusExpression n) {
+      checkForIntegerType(n.f0);
+      checkForIntegerType(n.f2);
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -576,6 +667,8 @@ public class DepthFirstVisitor implements Visitor {
     * f2 -> PrimaryExpression()
     */
    public void visit(MinusExpression n) {
+      checkForIntegerType(n.f0);
+      checkForIntegerType(n.f2);
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -587,6 +680,8 @@ public class DepthFirstVisitor implements Visitor {
     * f2 -> PrimaryExpression()
     */
    public void visit(TimesExpression n) {
+      checkForIntegerType(n.f0);
+      checkForIntegerType(n.f2);
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -599,6 +694,7 @@ public class DepthFirstVisitor implements Visitor {
     * f3 -> "]"
     */
    public void visit(ArrayLookup n) {
+      checkForIntegerType(n.f2);
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -626,7 +722,6 @@ public class DepthFirstVisitor implements Visitor {
     */
    public void visit(MessageSend n) {
       //TODO: check the message send later...
-
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
