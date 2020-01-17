@@ -12,7 +12,7 @@ import java.util.*;
  * order.  Your visitors may extend this class.
  */
 public class DepthFirstVisitor implements Visitor {
-
+   private static int ARRAY_TYPE   = 0;
    private static int BOOLEAN_TYPE = 1;
    private static int INTEGER_TYPE = 2;
    private static int CLASS_TYPE   = 3;
@@ -21,8 +21,9 @@ public class DepthFirstVisitor implements Visitor {
    ArrayList<ClassSymbol> symbolTable = new ArrayList<ClassSymbol> ();
    ClassSymbol  current = null;
    MethodSymbol curFunc = null;
-
+   
    boolean checkValue = true;
+   int returnType = -1;
 
    public boolean check() {
        return checkValue;
@@ -347,7 +348,6 @@ public class DepthFirstVisitor implements Visitor {
    public void visit(AssignmentStatement n) {
 
       //TODO: put code here...
-
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -542,7 +542,7 @@ public class DepthFirstVisitor implements Visitor {
       int exprType = p.f0.which;
       switch(exprType) {
 
-      case 0: // INTEGER LITERAL
+      case 0: // INTEGER TYPE
         checkValue = false;
         break;
       case 1: // TRUE
@@ -552,19 +552,23 @@ public class DepthFirstVisitor implements Visitor {
       case 3: { // IDENTIFIER
         Identifier i = (Identifier) p.f0.choice;
         String name = i.f0.tokenImage;
-        if(current.hasVariable(name, BOOLEAN_TYPE))
-            checkValue = false;
-        else if(curFunc.hasVariable(name, BOOLEAN_TYPE))
+        System.out.println(name);
+        if(curFunc.hasVariable(name, BOOLEAN_TYPE) || current.hasVariable(name, BOOLEAN_TYPE))
+            ;
+        else
             checkValue = false;
         break;
       }
       case 4: // THIS EXPRESSION
+        System.out.println("THIS BOOL");
         checkValue = false;
         break;
       case 5: // ARRAY_ALLOCATION_EXPRESSION
+        System.out.println("THIS BOOL");
         checkValue = false;
         break;
       case 6: // ALLOCATION EXPRESSION
+        System.out.println("THIS BOOL");
         checkValue = false;
         break;
       case 7: // NOT EXPRESSION
@@ -593,9 +597,9 @@ public class DepthFirstVisitor implements Visitor {
       case 3: { // IDENTIFIER
         Identifier i = (Identifier) p.f0.choice;
         String name = i.f0.tokenImage;
-        if(current.hasVariable(name, INTEGER_TYPE))
-            checkValue = false;
-        else if(curFunc.hasVariable(name, INTEGER_TYPE))
+        if(curFunc.hasVariable(name, INTEGER_TYPE) || current.hasVariable(name, INTEGER_TYPE))
+            ;
+        else
             checkValue = false;
         break;
       }
@@ -633,6 +637,7 @@ public class DepthFirstVisitor implements Visitor {
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
+      returnType = BOOLEAN_TYPE;
    }
 
    /**
@@ -646,6 +651,7 @@ public class DepthFirstVisitor implements Visitor {
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
+      returnType = BOOLEAN_TYPE;
    }
 
    /**
@@ -659,6 +665,7 @@ public class DepthFirstVisitor implements Visitor {
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
+      returnType = INTEGER_TYPE;
    }
 
    /**
@@ -672,6 +679,7 @@ public class DepthFirstVisitor implements Visitor {
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
+      returnType = INTEGER_TYPE;
    }
 
    /**
@@ -685,6 +693,7 @@ public class DepthFirstVisitor implements Visitor {
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
+      returnType = INTEGER_TYPE;
    }
 
    /**
@@ -699,6 +708,7 @@ public class DepthFirstVisitor implements Visitor {
       n.f1.accept(this);
       n.f2.accept(this);
       n.f3.accept(this);
+      returnType = INTEGER_TYPE;
    }
 
    /**
@@ -710,6 +720,7 @@ public class DepthFirstVisitor implements Visitor {
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
+      returnType = INTEGER_TYPE;
    }
 
    /**
@@ -768,6 +779,7 @@ public class DepthFirstVisitor implements Visitor {
     */
    public void visit(IntegerLiteral n) {
       n.f0.accept(this);
+      returnType = INTEGER_TYPE;
    }
 
    /**
@@ -775,6 +787,7 @@ public class DepthFirstVisitor implements Visitor {
     */
    public void visit(TrueLiteral n) {
       n.f0.accept(this);
+      returnType = BOOLEAN_TYPE;
    }
 
    /**
@@ -782,6 +795,7 @@ public class DepthFirstVisitor implements Visitor {
     */
    public void visit(FalseLiteral n) {
       n.f0.accept(this);
+      returnType = BOOLEAN_TYPE;
    }
 
    /**
@@ -811,6 +825,7 @@ public class DepthFirstVisitor implements Visitor {
       n.f2.accept(this);
       n.f3.accept(this);
       n.f4.accept(this);
+      returnType = ARRAY_TYPE;
    }
 
    /**
@@ -824,6 +839,7 @@ public class DepthFirstVisitor implements Visitor {
       n.f1.accept(this);
       n.f2.accept(this);
       n.f3.accept(this);
+      returnType = CLASS_TYPE;
    }
 
    /**
@@ -833,6 +849,8 @@ public class DepthFirstVisitor implements Visitor {
    public void visit(NotExpression n) {
       n.f0.accept(this);
       n.f1.accept(this);
+      //System.out.println(returnType + " " + BOOLEAN_TYPE);
+      returnType = BOOLEAN_TYPE;
    }
 
    /**
