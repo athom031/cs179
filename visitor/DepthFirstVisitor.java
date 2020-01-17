@@ -348,6 +348,12 @@ public class DepthFirstVisitor implements Visitor {
    public void visit(AssignmentStatement n) {
 
       //TODO: put code here...
+      /*String name = n.f0.f0.tokenImage;
+      if(curFunc.hasVariable(name) || current.hasVariable(name))
+            ;
+      else
+            checkValue = false;*/
+
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -366,6 +372,11 @@ public class DepthFirstVisitor implements Visitor {
    public void visit(ArrayAssignmentStatement n) {
 
       //TODO: put code here...
+      /*String name = n.f0.f0.tokenImage;
+      if(curFunc.hasVariable(name) || current.hasVariable(name))
+            ;
+      else
+            checkValue = false;*/
 
       n.f0.accept(this);
       n.f1.accept(this);
