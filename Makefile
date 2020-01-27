@@ -1,4 +1,4 @@
-FILE = print.java
+FILE = BinaryTree.java #TreeVisitor.java
 
 run:
 	javac Typecheck.java

@@ -16,6 +16,8 @@ public class ClassSymbol {
     public ArrayList<VariableSymbol> variableSymbols = new ArrayList<VariableSymbol>();
     public ArrayList<MethodSymbol>   methodSymbols   = new ArrayList<MethodSymbol>();
 
+
+
     public static void printSymbolTable(ArrayList<ClassSymbol> symbolTable) {
         StringBuilder sb = new StringBuilder(512);
         for(ClassSymbol c : symbolTable) {
@@ -40,6 +42,57 @@ public class ClassSymbol {
         }
         System.out.println(sb.toString());
     }
+
+    public void addExtendClass(String extendsClassName, ArrayList<ClassSymbol> symbolTable) {
+        this.extendsClassName = extendsClassName;
+        ClassSymbol ccc = new ClassSymbol();//dummy
+        for(ClassSymbol c : symbolTable) {
+            if(c.className == extendsClassName) {
+                ccc = c;
+                break;
+            }
+        }
+        System.out.println(ccc);
+        for(VariableSymbol v : ccc.variableSymbols) {
+            this.variableSymbols.add(v);
+        }
+        for(MethodSymbol m : ccc.methodSymbols) {
+            this.methodSymbols.add(m);
+        }
+        
+    }
+
+
+    public static int findMethod(ArrayList<ClassSymbol> symbolTable, String className, String methodName) {
+        for(ClassSymbol c : symbolTable) {
+            if(c.className == className) {
+                for(MethodSymbol m : c.methodSymbols) {
+                    if(m.methodName == methodName) {
+                        return m.retType;
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+
+    public int typeOf(String varName) {
+        for(VariableSymbol v : variableSymbols) {
+            if(v.varName == varName) return v.varType;
+        }
+        return -1;//cannot figure out type
+    }
+
+
+
+    public String getClassName(String varName) {
+        for(VariableSymbol v : variableSymbols) {
+            if(v.varName == varName) return v.className;
+        }
+        return null;
+    }
+
+
 
     static String type(int a) {
        switch(a) {

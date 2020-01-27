@@ -20,11 +20,32 @@ public class MethodSymbol {
         parameters.add(v);
     }
 
-    public void addLocalVariable(String varName, int varType) {
+    public int typeOf(String varName) {
+        for(VariableSymbol v : variableSymbols) {
+            if(v.varName == varName) return v.varType;
+        }
+        for(VariableSymbol v : parameters) {
+            if(v.varName == varName) return v.varType;
+        }
+        return -1;//cannot figure out type
+    }
+
+    public String getClassName(String varName) {
+        for(VariableSymbol v : variableSymbols) {
+            if(v.varName == varName) return v.className;
+        }
+        for(VariableSymbol v : parameters) {
+            if(v.varName == varName) return v.className;
+        }
+        return null;//cannot figure out type
+    }
+
+    public VariableSymbol addLocalVariable(String varName, int varType) {
         VariableSymbol v = new VariableSymbol();
         v.varName = varName;
         v.varType = varType;
         variableSymbols.add(v);
+        return v;
     }
 
     public boolean hasVariable(String varName) {
