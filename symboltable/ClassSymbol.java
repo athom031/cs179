@@ -34,7 +34,7 @@ public class ClassSymbol {
 
 
                 for(VariableSymbol mVar : m.variableSymbols) {
-                    sb.append(String.format("        %s %s\n", ClassSymbol.type(mVar.varType), mVar.varName));
+                    sb.append(String.format("        %s %s\n", ClassSymbol.type(mVar), mVar.varName));
                 }
                 sb.append("    }\n");
             }

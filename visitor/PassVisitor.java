@@ -597,7 +597,7 @@ public class PassVisitor implements Visitor {
 
 
       String functName = n.f2.f0.tokenImage;
-      System.out.println(classMessageSend+"->"+functName);
+      //System.out.println(classMessageSend+"->"+functName);
 
 
 
@@ -674,7 +674,7 @@ public class PassVisitor implements Visitor {
         }
       }*/
       ClassSymbol c = symbolTable.get(classIndex);
-      MethodSymbol m = c.get(methodIndex);
+      //MethodSymbol m = c.get(methodIndex);
 
       c.getClassName(n.f0.tokenImage);
 

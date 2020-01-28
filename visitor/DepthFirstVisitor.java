@@ -76,7 +76,7 @@ public class DepthFirstVisitor implements Visitor {
       n.f1.accept(this);
       n.f2.accept(this);
       secondPass();
-      //ClassSymbol.printSymbolTable(this.symbolTable);
+      ClassSymbol.printSymbolTable(this.symbolTable);
    }
 
    public void secondPass() {
