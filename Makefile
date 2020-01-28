@@ -1,4 +1,4 @@
-FILE = BubbleSort-error.java #TreeVisitor.java
+FILE = BinaryTree.java #TreeVisitor.java
 
 run:
 	javac Typecheck.java

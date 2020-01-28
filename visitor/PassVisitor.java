@@ -12,11 +12,11 @@ import java.util.*;
  * order.  Your visitors may extend this class.
  */
 public class PassVisitor implements Visitor {
-   private static int ARRAY_TYPE   = 0;
-   private static int BOOLEAN_TYPE = 1;
-   private static int INTEGER_TYPE = 2;
-   private static int CLASS_TYPE   = 3;
-   private static int VOID_TYPE    = 4;
+   private final static int ARRAY_TYPE   = 0;
+   private final static int BOOLEAN_TYPE = 1;
+   private final static int INTEGER_TYPE = 2;
+   private final static int CLASS_TYPE   = 3;
+   private final static int VOID_TYPE    = 4;
 
    final ArrayList<ClassSymbol> symbolTable; 
    int classIndex = 0;
@@ -71,9 +71,6 @@ public class PassVisitor implements Visitor {
       n.f1.accept(this);
       n.f2.accept(this);
    }
-
-   boolean noTypeCheck = false;
-
 
    /**
     * f0 -> "class"
@@ -177,9 +174,14 @@ public class PassVisitor implements Visitor {
       n.f2.accept(this);
    }
 
+   int expressionType = -1;
 
-   int numParameters = 0;
-
+   public void checkReturnType(Type t, Expression e, String name) {
+        int s = t.f0.which;
+        
+        if(s != expressionType)
+            checkValue = false;
+   }
 
    /**
     * f0 -> "public"
@@ -204,25 +206,20 @@ public class PassVisitor implements Visitor {
       n.f1.accept(this);
       n.f2.accept(this);
       n.f3.accept(this);
-      
-
       n.f4.accept(this);
       n.f5.accept(this);
-
-      numParameters = 0;
-
       n.f6.accept(this);
       n.f7.accept(this);
-      noTypeCheck = true;
       n.f8.accept(this);
       n.f9.accept(this);
+      visitingStatement = true;
       n.f10.accept(this);
-
-
-      noTypeCheck = false;
+      visitingStatement = false;
+      checkReturnType(n.f1, n.f10, n.f2.f0.tokenImage);
       n.f11.accept(this);
       n.f12.accept(this);
       functionIndex += 1;
+
       // we exited a function
    }
 
@@ -518,6 +515,7 @@ public class PassVisitor implements Visitor {
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
+      expressionType = BOOLEAN_TYPE;
    }
 
    /**
@@ -529,6 +527,7 @@ public class PassVisitor implements Visitor {
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
+      expressionType = BOOLEAN_TYPE;
    }
 
    /**
@@ -540,6 +539,7 @@ public class PassVisitor implements Visitor {
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
+      expressionType = INTEGER_TYPE;
    }
 
    /**
@@ -551,6 +551,7 @@ public class PassVisitor implements Visitor {
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
+      expressionType = INTEGER_TYPE;
    }
 
    /**
@@ -562,6 +563,7 @@ public class PassVisitor implements Visitor {
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
+      expressionType = INTEGER_TYPE;
    }
 
    /**
@@ -575,6 +577,8 @@ public class PassVisitor implements Visitor {
       n.f1.accept(this);
       n.f2.accept(this);
       n.f3.accept(this);
+
+      expressionType = INTEGER_TYPE;
    }
 
    /**
@@ -586,6 +590,8 @@ public class PassVisitor implements Visitor {
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
+
+      expressionType = INTEGER_TYPE;
    }
 
    /**
@@ -607,7 +613,7 @@ public class PassVisitor implements Visitor {
 
 
    public void visit(MessageSend n) {
-      head = head + 1;
+      head = head + 1;  // "push" the stack
       assert(head < numParam.length);
       numParam[head]=0;
 
@@ -619,26 +625,27 @@ public class PassVisitor implements Visitor {
       identifyClassType = false;
 
       String functName = n.f2.f0.tokenImage;
-      //System.out.println(classMessageSend+"->"+functName);
       MethodSymbol ret = ClassSymbol.findMethod(symbolTable, classMessageSend, functName);
       
       n.f2.accept(this);
       n.f3.accept(this);
       n.f4.accept(this);
+      n.f5.accept(this);
 
-      if(ret == null)
+      if(ret == null) {
         checkValue = false;
-      else {
+        expressionType = -1;
+      } else {
         int expected = ret.parameters.size();
         if(numParam[head] != expected) {
             checkValue = false;
         }
+        expressionType = ret.retType;
       }
 
-      n.f5.accept(this);
-
-      head = head - 1;
+      head = head - 1;  // "pop" the stack
       identifyClassType = false;
+
    }
 
    /**
@@ -685,6 +692,7 @@ public class PassVisitor implements Visitor {
     */
    public void visit(IntegerLiteral n) {
       n.f0.accept(this);
+      expressionType = INTEGER_TYPE;
    }
 
    /**
@@ -692,6 +700,7 @@ public class PassVisitor implements Visitor {
     */
    public void visit(TrueLiteral n) {
       n.f0.accept(this);
+      expressionType = BOOLEAN_TYPE;
    }
 
    /**
@@ -699,25 +708,28 @@ public class PassVisitor implements Visitor {
     */
    public void visit(FalseLiteral n) {
       n.f0.accept(this);
+      expressionType = BOOLEAN_TYPE;
    }
 
    /**
     * f0 -> <IDENTIFIER>
     */
    public void visit(Identifier n) {
+      // TODO: add the return type of IDENTIFIER
       n.f0.accept(this);
 
       if(visitingStatement) { //TODO: eventually optimize this, but for now, keep it separate
         String token = n.f0.tokenImage;
         ClassSymbol c = symbolTable.get(classIndex);
         MethodSymbol m = c.methodSymbols.get(functionIndex);
-
         if(ClassSymbol.isGlobal(symbolTable, token))
-            ;
+            expressionType = CLASS_TYPE; // TODO: This is a hack...
         else if(m.findVar(v->v.varName == token) != null) {
-
+            VariableSymbol vv = m.findVar(v->v.varName == token);
+            expressionType = vv.varType;
         } else if(c.findVar(v->v.varName == token) != null) {
-
+            VariableSymbol vv = c.findVar(v->v.varName==token);
+            expressionType = vv.varType;
         } else {
             //value doesn't exist.
             checkValue = false;
@@ -755,6 +767,7 @@ public class PassVisitor implements Visitor {
     */
    public void visit(ThisExpression n) {
       n.f0.accept(this);
+      expressionType = CLASS_TYPE;
       if(!identifyClassType) return;
       classMessageSend = symbolTable.get(classIndex).className;
    }
@@ -772,10 +785,9 @@ public class PassVisitor implements Visitor {
       n.f2.accept(this);
       n.f3.accept(this);
       n.f4.accept(this);
+      
+      expressionType = ARRAY_TYPE;
    }
-
-
-
 
    /**
     * f0 -> "new"
@@ -798,6 +810,8 @@ public class PassVisitor implements Visitor {
       //we need to cover cases such as: new A().run()
       if(identifyClassType)
         classMessageSend = ident;
+
+      expressionType = CLASS_TYPE;
    }
 
    /**
@@ -807,6 +821,8 @@ public class PassVisitor implements Visitor {
    public void visit(NotExpression n) {
       n.f0.accept(this);
       n.f1.accept(this);
+
+      expressionType = BOOLEAN_TYPE;
    }
 
    /**
