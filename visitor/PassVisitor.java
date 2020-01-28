@@ -70,14 +70,7 @@ public class PassVisitor implements Visitor {
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
-      secondPass();
    }
-
-   public void secondPass() {
-      ClassSymbol.printSymbolTable(symbolTable);
-   }
-
-
 
    boolean noTypeCheck = false;
 
@@ -597,16 +590,18 @@ public class PassVisitor implements Visitor {
     * f5 -> ")"
     */
 
-
+   boolean identifyClassType = false;
    String classMessageSend = null;
    public void visit(MessageSend n) {
-      
+      identifyClassType = false;
+      classMessageSend = null;
+      identifyClassType = true;
       n.f0.accept(this);
       n.f1.accept(this);
-
+      identifyClassType = false;
 
       String functName = n.f2.f0.tokenImage;
-      //System.out.println(classMessageSend+"->"+functName);
+      System.out.println(classMessageSend+"->"+functName);
 
 
 
@@ -629,6 +624,7 @@ public class PassVisitor implements Visitor {
         checkValue = false;
       }*/
 
+      identifyClassType = false;
       numParameters = 0;
    }
 
@@ -694,29 +690,35 @@ public class PassVisitor implements Visitor {
     * f0 -> <IDENTIFIER>
     */
    public void visit(Identifier n) {
-      //classMessageSend = symbolTable.get(classIndex).className;
-      /*for(ClassSymbol c : symbolTable) {
-        String s = c.getClassName(n.f0.tokenImage);
-        if(s != null && s.length() != 0) {
-            classMessageSend = s;
-        }
-      }*/
-      ClassSymbol c = symbolTable.get(classIndex);
-      //MethodSymbol m = c.get(methodIndex);
-
-      c.getClassName(n.f0.tokenImage);
-
-
-
       n.f0.accept(this);
+      if(!identifyClassType)
+        return;
+
+      String token = n.f0.tokenImage;
+
+
+      ClassSymbol c = symbolTable.get(classIndex);
+      //MethodSymbol m = c.methodSymbols.get(method);
+
+      //locate the class in the global scope.
+      //for(VariableSymbol v : c.variableSymbols) {
+      //}
+      VariableSymbol variable = c.findVar(v -> v.varName == token);
+      if(variable != null)
+        classMessageSend = variable.className;
+
+      //locate among the local variables
+
+
    }
 
    /**
     * f0 -> "this"
     */
    public void visit(ThisExpression n) {
-      classMessageSend = symbolTable.get(classIndex).className;
       n.f0.accept(this);
+      if(!identifyClassType) return;
+      classMessageSend = symbolTable.get(classIndex).className;
    }
 
    /**
@@ -748,6 +750,16 @@ public class PassVisitor implements Visitor {
       n.f1.accept(this);
       n.f2.accept(this);
       n.f3.accept(this);
+
+      //allocating new Object(), the ident must be a user-defined object
+      String ident = n.f1.f0.tokenImage;
+      ClassSymbol symbol = ClassSymbol.find(symbolTable, c->c.className == ident);
+      if(symbol == null)
+        checkValue = false;
+
+      //we need to cover cases such as: new A().run()
+      if(identifyClassType)
+        classMessageSend = ident;
    }
 
    /**

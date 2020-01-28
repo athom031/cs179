@@ -173,4 +173,30 @@ public class ClassSymbol {
         return false;
     }
 
+    public interface lambda {
+        public boolean func(ClassSymbol a);
+    }
+
+    public static ClassSymbol find(ArrayList<ClassSymbol> symbolTable, lambda l) {
+        for(ClassSymbol c : symbolTable) {
+            if(l.func(c))
+                return c;
+        }
+        return null;
+    }
+
+    public interface lambda2 {
+        public boolean func(VariableSymbol v);
+    }
+
+    public VariableSymbol findVar(lambda2 l) {
+        for(VariableSymbol v : this.variableSymbols) {
+            if(l.func(v))
+                return v;
+        }
+        return null;
+    }
+
+
+
 }
