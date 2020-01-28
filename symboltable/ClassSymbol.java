@@ -61,6 +61,13 @@ public class ClassSymbol {
         
     }
 
+    public static int findType(String name, ArrayList<ClassSymbol> symbolTable, int classIndex, int method) {
+        ClassSymbol c = symbolTable.get(classIndex);
+        MethodSymbol m = c.methodSymbols.get(method);
+
+
+        return 0;
+    }
 
     public static int findMethod(ArrayList<ClassSymbol> symbolTable, String className, String methodName) {
         for(ClassSymbol c : symbolTable) {

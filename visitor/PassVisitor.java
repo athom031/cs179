@@ -587,9 +587,21 @@ public class PassVisitor implements Visitor {
     * f4 -> ( ExpressionList() )?
     * f5 -> ")"
     */
+
+
+   String classMessageSend = null;
    public void visit(MessageSend n) {
+      
       n.f0.accept(this);
       n.f1.accept(this);
+
+
+      String functName = n.f2.f0.tokenImage;
+      System.out.println(classMessageSend+"->"+functName);
+
+
+
+
       n.f2.accept(this);
       n.f3.accept(this);
       n.f4.accept(this);
@@ -654,6 +666,20 @@ public class PassVisitor implements Visitor {
     * f0 -> <IDENTIFIER>
     */
    public void visit(Identifier n) {
+      //classMessageSend = symbolTable.get(classIndex).className;
+      /*for(ClassSymbol c : symbolTable) {
+        String s = c.getClassName(n.f0.tokenImage);
+        if(s != null && s.length() != 0) {
+            classMessageSend = s;
+        }
+      }*/
+      ClassSymbol c = symbolTable.get(classIndex);
+      MethodSymbol m = c.get(methodIndex);
+
+      c.getClassName(n.f0.tokenImage);
+
+
+
       n.f0.accept(this);
    }
 
@@ -661,6 +687,7 @@ public class PassVisitor implements Visitor {
     * f0 -> "this"
     */
    public void visit(ThisExpression n) {
+      classMessageSend = symbolTable.get(classIndex).className;
       n.f0.accept(this);
    }
 
@@ -693,8 +720,6 @@ public class PassVisitor implements Visitor {
       n.f1.accept(this);
       n.f2.accept(this);
       n.f3.accept(this);
-	  //checkClassForMethod = n.f1.f0.tokenImage;
-
    }
 
    /**
