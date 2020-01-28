@@ -247,7 +247,6 @@ public class PassVisitor implements Visitor {
     * f1 -> Identifier()
     */
    public void visit(FormalParameter n) {
-      numParameters += 1;
       // visited a function parameter
       n.f0.accept(this);
       n.f1.accept(this);
@@ -621,14 +620,14 @@ public class PassVisitor implements Visitor {
       n.f4.accept(this);
       n.f5.accept(this);
 
-      // TODO: this is NOT correct.
-      MethodSymbol method = symbolTable.get(1).methodSymbols.get(1);//functionIndex);
+      // TODO: this is NOT correct. need to properly compute the object/function
+      /*MethodSymbol method = symbolTable.get(1).methodSymbols.get(1);//functionIndex);
       System.out.print(method.parameters);
       int expectedNumParameters = method.parameters.size();// + method.variables.size();
       System.out.println(functName+","+ expectedNumParameters+" "+numParameters);
       if(numParameters != expectedNumParameters) {
         checkValue = false;
-      }
+      }*/
 
       numParameters = 0;
    }
