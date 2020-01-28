@@ -13,10 +13,11 @@ public class MethodSymbol {
         return this.methodName;
     }
 
-    public void addParameter(String varName, int varType) {
+    public void addParameter(String varName, int varType, String className) {
         VariableSymbol v = new VariableSymbol();
         v.varName = varName;
         v.varType = varType;
+        v.className = className;
         parameters.add(v);
     }
 
@@ -32,18 +33,25 @@ public class MethodSymbol {
 
     public String getClassName(String varName) {
         for(VariableSymbol v : variableSymbols) {
-            if(v.varName == varName) return v.className;
+            if(v.varName == varName) {
+                //System.out.println("CUR:"+v.className+v.varType);
+                return v.className;
+            }
         }
         for(VariableSymbol v : parameters) {
-            if(v.varName == varName) return v.className;
+            if(v.varName == varName) {
+                //System.out.println("CUR:"+v.className+v.varType);
+                return v.className;
+            }
         }
-        return null;//cannot figure out type
+        return "";//cannot figure out type
     }
 
-    public VariableSymbol addLocalVariable(String varName, int varType) {
+    public VariableSymbol addLocalVariable(String varName, int varType, String className) {
         VariableSymbol v = new VariableSymbol();
         v.varName = varName;
         v.varType = varType;
+        v.className = className;
         variableSymbols.add(v);
         return v;
     }

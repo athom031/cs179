@@ -23,13 +23,13 @@ public class ClassSymbol {
         for(ClassSymbol c : symbolTable) {
             sb.append(String.format("class %s : %s {\n", c.className, c.extendsClassName));
             for(VariableSymbol v : c.variableSymbols) {
-                sb.append(String.format("    %s %s\n", ClassSymbol.type(v.varType), v.varName));
+                sb.append(String.format("    %s %s\n", ClassSymbol.type(v), v.varName));
             }
             for(MethodSymbol m : c.methodSymbols) {
                 sb.append(String.format("    func %s -> %s {\n", m.methodName, ClassSymbol.type(m.retType)));
 
                 for(VariableSymbol param : m.parameters) {
-                    sb.append(String.format("        %s %s [parameter]\n", ClassSymbol.type(param.varType), param.varName));
+                    sb.append(String.format("        %s %s [parameter]\n", ClassSymbol.type(param), param.varName));
                 }
 
 
@@ -52,7 +52,6 @@ public class ClassSymbol {
                 break;
             }
         }
-        System.out.println(ccc);
         for(VariableSymbol v : ccc.variableSymbols) {
             this.variableSymbols.add(v);
         }
@@ -87,11 +86,24 @@ public class ClassSymbol {
 
     public String getClassName(String varName) {
         for(VariableSymbol v : variableSymbols) {
-            if(v.varName == varName) return v.className;
+            if(v.varName == varName) {
+//                System.out.println("CUR:"+v.className+v.varType);
+                return v.className;
+            }
         }
         return null;
     }
 
+    static String type(VariableSymbol v) {
+       int a = v.varType;
+       switch(a) {
+       case BOOLEAN_TYPE: return "boolean";
+       case INTEGER_TYPE: return "integer";
+       case CLASS_TYPE:   return v.className;
+       case VOID_TYPE:    return "void";
+       default: return "unknown";
+       }
+    }
 
 
     static String type(int a) {
@@ -109,10 +121,11 @@ public class ClassSymbol {
         return this.className;
     }
 
-    public VariableSymbol addClassVariable(String varName, int varType) {
+    public VariableSymbol addClassVariable(String varName, int varType, String className) {
         VariableSymbol v = new VariableSymbol();
         v.varName = varName;
         v.varType = varType;
+        v.className = className;
         variableSymbols.add(v);
         return v;
     }

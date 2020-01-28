@@ -9,8 +9,10 @@ public class Typecheck {
             MiniJavaParser parser = new MiniJavaParser(System.in);
             Goal goal = MiniJavaParser.Goal();
             DepthFirstVisitor visitor = new DepthFirstVisitor();
-            visitor.visit(goal);
-            if(visitor.check()) {
+            PassVisitor passVisitor   = new PassVisitor(visitor.symbolTable);
+            visitor.visit(goal);     // construct the symboltable
+            passVisitor.visit(goal);
+            if(visitor.check() && passVisitor.check()) {
                 System.out.println("Program type checked successfully");
             } else {
                 System.out.println("Type error");
