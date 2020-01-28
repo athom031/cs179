@@ -1,4 +1,4 @@
-FILE = BinaryTree.java #TreeVisitor.java
+FILE = LinearSearch.java #TreeVisitor.java
 
 run:
 	javac Typecheck.java

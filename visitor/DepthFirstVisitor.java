@@ -29,8 +29,6 @@ public class DepthFirstVisitor implements Visitor {
    ArrayList<String> classMethodCheck = new ArrayList<String>();
    ArrayList<String> newExpr = new ArrayList<String>();
 
-
-
    public boolean check() {
        return checkValue;
    }

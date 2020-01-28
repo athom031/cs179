@@ -574,8 +574,14 @@ public class PassVisitor implements Visitor {
     */
    public void visit(ArrayLookup n) {
       n.f0.accept(this);
+      // check that the variable is an array type
+      if(expressionType != ARRAY_TYPE)
+        checkValue = false;
       n.f1.accept(this);
       n.f2.accept(this);
+      // check that the index is an integer type
+      if(expressionType != INTEGER_TYPE)
+        checkValue = false;
       n.f3.accept(this);
 
       expressionType = INTEGER_TYPE;
@@ -588,6 +594,8 @@ public class PassVisitor implements Visitor {
     */
    public void visit(ArrayLength n) {
       n.f0.accept(this);
+      if(expressionType != ARRAY_TYPE)
+        checkValue = false;
       n.f1.accept(this);
       n.f2.accept(this);
 
