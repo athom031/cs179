@@ -16,7 +16,15 @@ public class ClassSymbol {
     public ArrayList<VariableSymbol> variableSymbols = new ArrayList<VariableSymbol>();
     public ArrayList<MethodSymbol>   methodSymbols   = new ArrayList<MethodSymbol>();
 
-
+    public static boolean isGlobal(ArrayList<ClassSymbol> symbolTable, String token) {
+ 		for(ClassSymbol c : symbolTable) {
+			if(c.className == token) return true;
+			for(MethodSymbol m : c.methodSymbols) {
+				if(m.methodName == token) return true;
+			}
+		}
+		return false;
+	}
 
     public static void printSymbolTable(ArrayList<ClassSymbol> symbolTable) {
         StringBuilder sb = new StringBuilder(512);

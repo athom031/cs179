@@ -18,7 +18,7 @@ public class PassVisitor implements Visitor {
    private static int CLASS_TYPE   = 3;
    private static int VOID_TYPE    = 4;
 
-   ArrayList<ClassSymbol> symbolTable; 
+   final ArrayList<ClassSymbol> symbolTable; 
    int classIndex = 0;
    int functionIndex = 0;
    boolean checkValue = true;
@@ -297,8 +297,13 @@ public class PassVisitor implements Visitor {
     *       | WhileStatement()
     *       | PrintStatement()
     */
+
+   boolean visitingStatement = false;
+
    public void visit(Statement n) {
+      visitingStatement = true;
       n.f0.accept(this);
+      visitingStatement = false;
    }
 
    /**
@@ -341,6 +346,8 @@ public class PassVisitor implements Visitor {
    public void visit(ArrayAssignmentStatement n) {
 
       //TODO: put code here...
+      String token = n.f0.f0.tokenImage;
+
 
       n.f0.accept(this);
       n.f1.accept(this);
@@ -601,6 +608,7 @@ public class PassVisitor implements Visitor {
 
    public void visit(MessageSend n) {
       head = head + 1;
+      assert(head < numParam.length);
       numParam[head]=0;
 
       identifyClassType = false;
@@ -616,13 +624,7 @@ public class PassVisitor implements Visitor {
       
       n.f2.accept(this);
       n.f3.accept(this);
-
-
-      assert(head < numParam.length);
-
-
       n.f4.accept(this);
-
 
       if(ret == null)
         checkValue = false;
@@ -633,18 +635,8 @@ public class PassVisitor implements Visitor {
         }
       }
 
-
-
       n.f5.accept(this);
 
-      // TODO: this is NOT correct. need to properly compute the object/function
-      /*MethodSymbol method = symbolTable.get(1).methodSymbols.get(1);//functionIndex);
-      System.out.print(method.parameters);
-      int expectedNumParameters = method.parameters.size();// + method.variables.size();
-      System.out.println(functName+","+ expectedNumParameters+" "+numParameters);
-      if(numParameters != expectedNumParameters) {
-        checkValue = false;
-      }*/
       head = head - 1;
       identifyClassType = false;
    }
@@ -714,18 +706,33 @@ public class PassVisitor implements Visitor {
     */
    public void visit(Identifier n) {
       n.f0.accept(this);
+
+      if(visitingStatement) { //TODO: eventually optimize this, but for now, keep it separate
+        String token = n.f0.tokenImage;
+        ClassSymbol c = symbolTable.get(classIndex);
+        MethodSymbol m = c.methodSymbols.get(functionIndex);
+
+        if(ClassSymbol.isGlobal(symbolTable, token))
+            ;
+        else if(m.findVar(v->v.varName == token) != null) {
+
+        } else if(c.findVar(v->v.varName == token) != null) {
+
+        } else {
+            //value doesn't exist.
+            checkValue = false;
+        }
+      }
+
+
+
       if(!identifyClassType)
         return;
 
       String token = n.f0.tokenImage;
 
-
-      ClassSymbol c = symbolTable.get(classIndex);
-      //MethodSymbol m = c.methodSymbols.get(method);
-
       //locate the class in the global scope.
-      //for(VariableSymbol v : c.variableSymbols) {
-      //}
+      ClassSymbol c = symbolTable.get(classIndex);
       VariableSymbol variable = c.findVar(v -> v.varName == token);
       if(variable != null) {
         classMessageSend = variable.className;
@@ -739,7 +746,6 @@ public class PassVisitor implements Visitor {
         return;
       }
 
-      //TODO: This might be a bug..
       if(c.methodSymbols.get(functionIndex).methodName != "main")
         checkValue = false;
    }
