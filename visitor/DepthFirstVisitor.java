@@ -75,22 +75,8 @@ public class DepthFirstVisitor implements Visitor {
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
-      secondPass();
 //      ClassSymbol.printSymbolTable(this.symbolTable);
    }
-
-   public void secondPass() {
-      for(int i = 0; i < classMethodCheck.size(); i += 2) {
-		String className = classMethodCheck.get(i);
-        String classMethod = classMethodCheck.get(i+1);
-        if(ClassSymbol.findMethod(symbolTable, className, classMethod) == -1) {
-            //System.out.println(className+"."+classMethod);
-			//checkValue = false;
-		}
-      }
-   }
-
-
 
    boolean noTypeCheck = false;
 

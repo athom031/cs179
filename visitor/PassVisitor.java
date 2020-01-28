@@ -592,7 +592,17 @@ public class PassVisitor implements Visitor {
 
    boolean identifyClassType = false;
    String classMessageSend = null;
+
+   // TODO: not robust for long term, but good enough for now.
+   int [] numParam = new int[10];
+   int head = -1;
+
+
+
    public void visit(MessageSend n) {
+      head = head + 1;
+      numParam[head]=0;
+
       identifyClassType = false;
       classMessageSend = null;
       identifyClassType = true;
@@ -601,18 +611,30 @@ public class PassVisitor implements Visitor {
       identifyClassType = false;
 
       String functName = n.f2.f0.tokenImage;
-      System.out.println(classMessageSend+"->"+functName);
-
-
-
-
+      //System.out.println(classMessageSend+"->"+functName);
+      MethodSymbol ret = ClassSymbol.findMethod(symbolTable, classMessageSend, functName);
+      
       n.f2.accept(this);
       n.f3.accept(this);
 
 
-      numParameters = 0;
+      assert(head < numParam.length);
+
 
       n.f4.accept(this);
+
+
+      if(ret == null)
+        checkValue = false;
+      else {
+        int expected = ret.parameters.size();
+        if(numParam[head] != expected) {
+            checkValue = false;
+        }
+      }
+
+
+
       n.f5.accept(this);
 
       // TODO: this is NOT correct. need to properly compute the object/function
@@ -623,9 +645,8 @@ public class PassVisitor implements Visitor {
       if(numParameters != expectedNumParameters) {
         checkValue = false;
       }*/
-
+      head = head - 1;
       identifyClassType = false;
-      numParameters = 0;
    }
 
    /**
@@ -633,8 +654,8 @@ public class PassVisitor implements Visitor {
     * f1 -> ( ExpressionRest() )*
     */
    public void visit(ExpressionList n) {
+      numParam[head]++;
 
-      numParameters += 1;
 
       n.f0.accept(this);
       n.f1.accept(this);
@@ -645,7 +666,9 @@ public class PassVisitor implements Visitor {
     * f1 -> Expression()
     */
    public void visit(ExpressionRest n) {
-      numParameters += 1;
+      numParam[head]++;
+
+
       n.f0.accept(this);
       n.f1.accept(this);
    }
@@ -704,12 +727,21 @@ public class PassVisitor implements Visitor {
       //for(VariableSymbol v : c.variableSymbols) {
       //}
       VariableSymbol variable = c.findVar(v -> v.varName == token);
-      if(variable != null)
+      if(variable != null) {
         classMessageSend = variable.className;
+        return;
+      }
 
       //locate among the local variables
+      variable = c.methodSymbols.get(functionIndex).findVar(v -> v.varName == token);
+      if(variable != null) {
+        classMessageSend = variable.className;
+        return;
+      }
 
-
+      //TODO: This might be a bug..
+      if(c.methodSymbols.get(functionIndex).methodName != "main")
+        checkValue = false;
    }
 
    /**

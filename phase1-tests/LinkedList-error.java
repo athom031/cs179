@@ -137,7 +137,7 @@ class List{
 		} 
 		else{ // delete a non first element
 		    System.out.println(0-555);
-		    aux05 = prev.SetNext(aux01.GetNext());
+		    //aux05 = prev.SetNext(aux01.GetNext());
 		    System.out.println(0-555);
 		    
 		}

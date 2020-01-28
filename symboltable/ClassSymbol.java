@@ -69,17 +69,17 @@ public class ClassSymbol {
         return 0;
     }
 
-    public static int findMethod(ArrayList<ClassSymbol> symbolTable, String className, String methodName) {
+    public static MethodSymbol findMethod(ArrayList<ClassSymbol> symbolTable, String className, String methodName) {
         for(ClassSymbol c : symbolTable) {
             if(c.className == className) {
                 for(MethodSymbol m : c.methodSymbols) {
                     if(m.methodName == methodName) {
-                        return m.retType;
+                        return m;
                     }
                 }
             }
         }
-        return -1;
+        return null;
     }
 
     public int typeOf(String varName) {
@@ -196,7 +196,5 @@ public class ClassSymbol {
         }
         return null;
     }
-
-
 
 }

@@ -78,5 +78,23 @@ public class MethodSymbol {
         return false;
     }
 
+    public interface lambda2 {
+        public boolean func(VariableSymbol v);
+    }
+
+    public VariableSymbol findVar(lambda2 l) {
+        for(VariableSymbol v : this.parameters) {
+            if(l.func(v))
+                return v;
+        }
+        for(VariableSymbol v : this.variableSymbols) {
+            if(l.func(v))
+                return v;
+        }
+        return null;
+    }
+
+
+
 }
 
