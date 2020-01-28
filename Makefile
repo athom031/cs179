@@ -1,4 +1,4 @@
-FILE = BinaryTree.java #TreeVisitor.java
+FILE = MoreThan4-error.java #TreeVisitor.java
 
 run:
 	javac Typecheck.java

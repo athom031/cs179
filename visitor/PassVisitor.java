@@ -21,10 +21,10 @@ public class PassVisitor implements Visitor {
    ArrayList<ClassSymbol> symbolTable; 
    int classIndex = 0;
    int functionIndex = 0;
-
+   boolean checkValue = true;
 
    public boolean check() {
-      return true;
+      return checkValue;
    }
 
    public PassVisitor(ArrayList<ClassSymbol> symbolTable) {
@@ -74,7 +74,7 @@ public class PassVisitor implements Visitor {
    }
 
    public void secondPass() {
-
+      ClassSymbol.printSymbolTable(symbolTable);
    }
 
 
@@ -184,6 +184,10 @@ public class PassVisitor implements Visitor {
       n.f2.accept(this);
    }
 
+
+   int numParameters = 0;
+
+
    /**
     * f0 -> "public"
     * f1 -> Type()
@@ -207,8 +211,13 @@ public class PassVisitor implements Visitor {
       n.f1.accept(this);
       n.f2.accept(this);
       n.f3.accept(this);
+      
+
       n.f4.accept(this);
       n.f5.accept(this);
+
+      numParameters = 0;
+
       n.f6.accept(this);
       n.f7.accept(this);
       noTypeCheck = true;
@@ -238,6 +247,7 @@ public class PassVisitor implements Visitor {
     * f1 -> Identifier()
     */
    public void visit(FormalParameter n) {
+      numParameters += 1;
       // visited a function parameter
       n.f0.accept(this);
       n.f1.accept(this);
@@ -604,8 +614,23 @@ public class PassVisitor implements Visitor {
 
       n.f2.accept(this);
       n.f3.accept(this);
+
+
+      numParameters = 0;
+
       n.f4.accept(this);
       n.f5.accept(this);
+
+      // TODO: this is NOT correct.
+      MethodSymbol method = symbolTable.get(1).methodSymbols.get(1);//functionIndex);
+      System.out.print(method.parameters);
+      int expectedNumParameters = method.parameters.size();// + method.variables.size();
+      System.out.println(functName+","+ expectedNumParameters+" "+numParameters);
+      if(numParameters != expectedNumParameters) {
+        checkValue = false;
+      }
+
+      numParameters = 0;
    }
 
    /**
@@ -613,6 +638,9 @@ public class PassVisitor implements Visitor {
     * f1 -> ( ExpressionRest() )*
     */
    public void visit(ExpressionList n) {
+
+      numParameters += 1;
+
       n.f0.accept(this);
       n.f1.accept(this);
    }
@@ -622,6 +650,7 @@ public class PassVisitor implements Visitor {
     * f1 -> Expression()
     */
    public void visit(ExpressionRest n) {
+      numParameters += 1;
       n.f0.accept(this);
       n.f1.accept(this);
    }
