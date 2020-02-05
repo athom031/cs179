@@ -1,4 +1,0 @@
-func Main()
-  ____t0 = Add(12 21)
-  PrintIntS(____t0)
-  ret

@@ -30,12 +30,9 @@ public class VaporVisitor implements Visitor {
    final ArrayList<ClassSymbol> symbolTable; 
    int classIndex = 0;
    int functionIndex = 0;
-   int expressionType = -1;
-   boolean visitingStatement = false;
-   boolean identifyClassType = false;
-   String classMessageSend = null;
    String variableName = null;
    int tempNumber = 0;
+   int labelNo = 0;
 
    String temp() {
     String name = String.format("____t%d", tempNumber);
@@ -43,9 +40,11 @@ public class VaporVisitor implements Visitor {
     return name;
    }
 
-   // TODO: not robust for long term, but good enough for now.
-   int [] numParam = new int[10];
-   int head = -1;
+   String label() {
+    String l = String.format("__label%d", labelNo);
+    labelNo++;
+    return l;
+   }
 
    public VaporVisitor(ArrayList<ClassSymbol> symbolTable) {
       this.symbolTable = symbolTable;
@@ -223,9 +222,7 @@ public class VaporVisitor implements Visitor {
       n.f7.accept(this);
       n.f8.accept(this);
       n.f9.accept(this);
-      visitingStatement = true;
       n.f10.accept(this);
-      visitingStatement = false;
       n.f11.accept(this);
       n.f12.accept(this);
       functionIndex += 1;
@@ -305,9 +302,7 @@ public class VaporVisitor implements Visitor {
     *       | PrintStatement()
     */
    public void visit(Statement n) {
-      visitingStatement = true;
       n.f0.accept(this);
-      visitingStatement = false;
    }
 
    /**
@@ -375,41 +370,31 @@ public class VaporVisitor implements Visitor {
     * f6 -> Statement()
     */
    public void visit(IfStatement n) {
-
-      //TODO: figure out whether the expression "f2" is a boolean expr
-      int exprType = n.f2.f0.which;
-      switch(exprType) {
-      case 0: // && is a boolean expression, so it's okay
-        break;
-      case 1: // < is a boolean expression, so it's okay
-        break;
-      case 2: // + is a integer expression, so it's not okay
-        break;
-      case 3: // - is a integer expression, so it's not okay
-        break;
-      case 4: // * is a integer expression, so it's not okay
-        break;
-      case 5: // a[i] is a integer expression, so it's not okay
-        break;
-      case 6: // a.length  is a integer expression, so it's not okay
-        break;
-      case 7: // a.methodCall(b, c, d)
-        // TODO: check the method call for type.
-        
-        break;
-      case 8: // primary expression
-        break;
-      default:
-        break;
-      }
-
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
+      String elseLabel = label();
+      String endifLabel = label();
+      String a = variableName;
+      String instr = String.format("  if0 %s goto :%s", a, elseLabel);
+      System.out.println(instr);
+
       n.f3.accept(this);
       n.f4.accept(this);
+
+
+      instr = String.format("  goto :%s", endifLabel);
+      System.out.println(instr);
+
+      instr = String.format("  %s:", elseLabel);
+      System.out.println(instr);
+
       n.f5.accept(this);
       n.f6.accept(this);
+
+      instr = String.format("  %s:", endifLabel);
+      System.out.println(instr);
+
    }
 
    /**
@@ -420,11 +405,28 @@ public class VaporVisitor implements Visitor {
     * f4 -> Statement()
     */
    public void visit(WhileStatement n) {
+      String beginLoopLabel = label();
+      String endLoopLabel = label();
+
+      String instr = String.format("  %s:", beginLoopLabel);
+      System.out.println(instr);
+
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
+
+      String a = variableName;
+      instr = String.format("  if0 %s goto :%s", a, endLoopLabel);
+      System.out.println(instr);
+
       n.f3.accept(this);
       n.f4.accept(this);
+
+      instr = String.format("  goto :%s", beginLoopLabel);
+      System.out.println(instr);
+      
+      instr = String.format("  %s:", endLoopLabel);
+      System.out.println(instr);
    }
 
    /**
@@ -468,11 +470,32 @@ public class VaporVisitor implements Visitor {
     */
 
    public void visit(AndExpression n) {
-      // TODO: AND EXPR
+      // TODO: AND EXPR needs to be fixed later!!!! --VAPOR OUTPUT
+      String andLabel = label();
+      String andBool  = temp();
+
+      String instr = String.format("  %s = 0", andBool);
+      System.out.println(instr);
+
       n.f0.accept(this);
+      String a = variableName;
+      instr = String.format("  if0 %s goto :%s", a, andLabel);
+      System.out.println(instr);
+
       n.f1.accept(this);
       n.f2.accept(this);
-      expressionType = BOOLEAN_TYPE;
+      String b = variableName;
+
+      instr = String.format("  if0 %s goto :%s", b, andLabel);
+      System.out.println(instr);
+
+      instr = String.format("  %s = 1", andBool);
+      System.out.println(instr);
+
+      instr = String.format("  %s:", andLabel);
+      System.out.println(instr);
+
+      variableName = andBool;
    }
 
    /**
@@ -482,9 +505,14 @@ public class VaporVisitor implements Visitor {
     */
    public void visit(CompareExpression n) {
       n.f0.accept(this);
+      String a = variableName;
       n.f1.accept(this);
       n.f2.accept(this);
-      expressionType = BOOLEAN_TYPE;
+      String b = variableName;
+      String c = temp();
+      String instr = String.format("  %s = LtS(%s %s)", c, a, b);
+      System.out.println(instr);
+      variableName = c;
    }
 
    /**
@@ -501,7 +529,6 @@ public class VaporVisitor implements Visitor {
       String c = temp();
       String instr = String.format("  %s = Add(%s %s)", c, a, b);
       System.out.println(instr);
-      expressionType = INTEGER_TYPE;
       variableName = c;
    }
 
@@ -519,7 +546,6 @@ public class VaporVisitor implements Visitor {
       String c = temp();
       String instr = String.format("  %s = Sub(%s %s)", c, a, b);
       System.out.println(instr);
-      expressionType = INTEGER_TYPE;
       variableName = c;
    }
 
@@ -537,7 +563,6 @@ public class VaporVisitor implements Visitor {
       String c = temp();
       String instr = String.format("  %s = MulS(%s %s)", c, a, b);
       System.out.println(instr);
-      expressionType = INTEGER_TYPE;
       variableName = c;
    }
 
@@ -555,7 +580,6 @@ public class VaporVisitor implements Visitor {
       // check that the index is an integer type
       n.f3.accept(this);
 
-      expressionType = INTEGER_TYPE;
    }
 
    /**
@@ -568,7 +592,6 @@ public class VaporVisitor implements Visitor {
       n.f1.accept(this);
       n.f2.accept(this);
 
-      expressionType = INTEGER_TYPE;
    }
 
    /**
@@ -582,33 +605,12 @@ public class VaporVisitor implements Visitor {
 
 
    public void visit(MessageSend n) {
-      head = head + 1;  // "push" the stack
-      assert(head < numParam.length);
-      numParam[head]=0;
-
-      identifyClassType = false;
-      classMessageSend = null;
-      identifyClassType = true;
       n.f0.accept(this);
       n.f1.accept(this);
-      identifyClassType = false;
-
-      String functName = n.f2.f0.tokenImage;
-      MethodSymbol ret = ClassSymbol.findMethod(symbolTable, classMessageSend, functName);
-      
       n.f2.accept(this);
       n.f3.accept(this);
       n.f4.accept(this);
       n.f5.accept(this);
-
-      {
-        int expected = ret.parameters.size();
-        expressionType = ret.retType;
-      }
-
-      head = head - 1;  // "pop" the stack
-      identifyClassType = false;
-
    }
 
    /**
@@ -616,9 +618,6 @@ public class VaporVisitor implements Visitor {
     * f1 -> ( ExpressionRest() )*
     */
    public void visit(ExpressionList n) {
-      numParam[head]++;
-
-
       n.f0.accept(this);
       n.f1.accept(this);
    }
@@ -628,9 +627,6 @@ public class VaporVisitor implements Visitor {
     * f1 -> Expression()
     */
    public void visit(ExpressionRest n) {
-      numParam[head]++;
-
-
       n.f0.accept(this);
       n.f1.accept(this);
    }
@@ -656,7 +652,6 @@ public class VaporVisitor implements Visitor {
    public void visit(IntegerLiteral n) {
       n.f0.accept(this);
       //System.err.println(n.f0.tokenImage);
-      expressionType = INTEGER_TYPE;
       variableName = n.f0.tokenImage;
    }
 
@@ -665,7 +660,6 @@ public class VaporVisitor implements Visitor {
     */
    public void visit(TrueLiteral n) {
       n.f0.accept(this);
-      expressionType = BOOLEAN_TYPE;
       variableName = "1";  // 1 -> true
    }
 
@@ -674,7 +668,6 @@ public class VaporVisitor implements Visitor {
     */
    public void visit(FalseLiteral n) {
       n.f0.accept(this);
-      expressionType = BOOLEAN_TYPE;
       variableName = "0";  // 0 -> false
    }
 
@@ -684,8 +677,7 @@ public class VaporVisitor implements Visitor {
    public void visit(Identifier n) {
       // TODO: add the return type of IDENTIFIER
       n.f0.accept(this);
-      String token = n.f0.tokenImage;
-      variableName = token;
+      variableName = n.f0.tokenImage;
    }
 
    /**
@@ -693,9 +685,6 @@ public class VaporVisitor implements Visitor {
     */
    public void visit(ThisExpression n) {
       n.f0.accept(this);
-      expressionType = CLASS_TYPE;
-      if(!identifyClassType) return;
-      classMessageSend = symbolTable.get(classIndex).className;
    }
 
    /**
@@ -711,8 +700,6 @@ public class VaporVisitor implements Visitor {
       n.f2.accept(this);
       n.f3.accept(this);
       n.f4.accept(this);
-      
-      expressionType = ARRAY_TYPE;
    }
 
    /**
@@ -726,16 +713,6 @@ public class VaporVisitor implements Visitor {
       n.f1.accept(this);
       n.f2.accept(this);
       n.f3.accept(this);
-
-      //allocating new Object(), the ident must be a user-defined object
-      String ident = n.f1.f0.tokenImage;
-      ClassSymbol symbol = ClassSymbol.find(symbolTable, c->c.className == ident);
-
-      //we need to cover cases such as: new A().run()
-      if(identifyClassType)
-        classMessageSend = ident;
-
-      expressionType = CLASS_TYPE;
    }
 
    /**
@@ -745,8 +722,6 @@ public class VaporVisitor implements Visitor {
    public void visit(NotExpression n) {
       n.f0.accept(this);
       n.f1.accept(this);
-
-      expressionType = BOOLEAN_TYPE;
    }
 
    /**

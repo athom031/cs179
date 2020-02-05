@@ -3,13 +3,18 @@ class Expr {
     int a;
     int b;
     int c;
-    a = 1;
-    b = a + a;
-    c = b * b;
-    c = c * c;
-    c = c - 1;
-    System.out.println(c);
+    int d;
+    int e;
 
+    a = 1;
+    b = 2;
+    c = 3;
+    d = 10;
+    e = 0;
+    while((e < d) && (e < (a*100))) {
+      e = e+1;
+    }
+    System.out.println(e);
   }
 
 }
