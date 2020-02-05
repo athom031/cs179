@@ -1,1 +1,5 @@
-Program type checked successfully
+func Main()
+  PrintIntS(1000)
+  ____t0 = Add(12 21)
+  PrintIntS(____t0)
+  ret

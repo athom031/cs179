@@ -2,7 +2,7 @@ import syntaxtree.*;
 
 public class Typecheck {
 
-    public static void main(String [] args) {
+    /*public static void main(String [] args) {
         try {
             // Initialize the parser, and parse the program
             MiniJavaParser parser = new MiniJavaParser(System.in);
@@ -27,6 +27,6 @@ public class Typecheck {
 
 
         }
-    }
+    }*/
 
 }

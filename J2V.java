@@ -10,10 +10,16 @@ public class J2V {
       Goal goal = MiniJavaParser.Goal();
       DepthFirstVisitor visitor = new DepthFirstVisitor();
       PassVisitor passVisitor   = new PassVisitor(visitor.symbolTable);
+      VaporVisitor vaporVisitor = new VaporVisitor(visitor.symbolTable);
+
+
+
       visitor.visit(goal);     // construct the symboltable
       passVisitor.visit(goal);
       if(visitor.check() && passVisitor.check()) {
-        System.out.println("Program type checked successfully");
+        System.err.println("Program type checked successfully");
+        vaporVisitor.visit(goal);
+
       } else {
         System.err.println("Type error");
         System.exit(1);
