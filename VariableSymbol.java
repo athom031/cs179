@@ -1,5 +1,3 @@
-package symboltable;
-
 public class VariableSymbol {
     
     public String varName;        // the name of the variable

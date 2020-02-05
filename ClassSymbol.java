@@ -1,5 +1,3 @@
-package symboltable;
-
 import java.util.ArrayList;
 import java.lang.StringBuilder;
 
