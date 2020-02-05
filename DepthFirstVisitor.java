@@ -240,7 +240,11 @@ public class DepthFirstVisitor implements Visitor {
       String methodName   = n.f2.f0.tokenImage;
       int retType         = n.f1.f0.which;
       // we entered a function
-      this.curFunc = this.current.addClassMethod(methodName, retType);
+      if(!this.current.hasMethod(methodName))
+      	this.curFunc = this.current.addClassMethod(methodName, retType);
+			else
+				this.curFunc = ClassSymbol.findMethod(symbolTable, this.current.className, methodName);
+			assert(this.curFunc != null);
 
       n.f0.accept(this);
       n.f1.accept(this);

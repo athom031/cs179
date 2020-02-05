@@ -86,6 +86,19 @@ public class VaporVisitor implements Visitor {
     * f2 -> <EOF>
     */
    public void visit(Goal n) {
+
+      for(ClassSymbol c : symbolTable) {
+        String className = c.className;
+        String x = String.format("const vmt_%s", className);
+        System.out.println(x);
+        for(MethodSymbol m : c.methodSymbols) {
+          if(m.methodName == "main") continue;
+          String y = String.format("  :%s.%s", className, m.methodName);
+          System.out.println(y);
+        }
+        System.out.println();
+      }
+
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -130,7 +143,7 @@ public class VaporVisitor implements Visitor {
       n.f14.accept(this);
       n.f15.accept(this);
       n.f16.accept(this);
-      System.out.println("  ret");
+      System.out.println("  ret\n");
       n.f17.accept(this);
    }
 
@@ -141,6 +154,10 @@ public class VaporVisitor implements Visitor {
       classIndex = classIndex + 1;
       functionIndex = 0;
       n.f0.accept(this);
+
+
+
+
    }
 
    /**
@@ -211,6 +228,16 @@ public class VaporVisitor implements Visitor {
    public void visit(MethodDeclaration n) {
 
       // we entered a function
+      
+      ClassSymbol c = symbolTable.get(classIndex);
+      MethodSymbol m = c.methodSymbols.get(functionIndex);
+      String params = "";
+      for(VariableSymbol v : m.parameters) {
+        params += " " + v.varName;
+      }
+
+      String instr = String.format("func %s.%s(this%s)", c.className, m.methodName, params);
+      System.out.println(instr);
 
       n.f0.accept(this);
       n.f1.accept(this);
@@ -223,10 +250,13 @@ public class VaporVisitor implements Visitor {
       n.f8.accept(this);
       n.f9.accept(this);
       n.f10.accept(this);
+      String retValue = variableName;
       n.f11.accept(this);
       n.f12.accept(this);
       functionIndex += 1;
 
+      instr = String.format(" ret %s\n", retValue);
+      System.out.println(instr);
       // we exited a function
    }
 
@@ -722,6 +752,18 @@ public class VaporVisitor implements Visitor {
    public void visit(NotExpression n) {
       n.f0.accept(this);
       n.f1.accept(this);
+      String a = variableName;
+      if(a == "0") {
+        variableName = "1";
+        return;
+      } else if(a == "1") {
+        variableName = "0";
+        return;
+      }
+
+      // if 0==0, var=1, if 0!=1, var=0, performs a flip
+      String instr = String.format("  %s = Eq(%s 0)", a, a);
+      System.out.println(instr);
    }
 
    /**

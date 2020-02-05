@@ -82,11 +82,12 @@ public class MethodSymbol {
     }
 
     public VariableSymbol findVar(lambda2 l) {
-        for(VariableSymbol v : this.parameters) {
+        for(VariableSymbol v : this.variableSymbols) {
             if(l.func(v))
                 return v;
         }
-        for(VariableSymbol v : this.variableSymbols) {
+
+        for(VariableSymbol v : this.parameters) {
             if(l.func(v))
                 return v;
         }

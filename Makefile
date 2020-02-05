@@ -7,6 +7,7 @@ OUTPUT_FOLDER=out
 run:
 	javac J2V.java
 	java J2V < $(FOLDER)/$(JAVA) > $(OUTPUT_FOLDER)/$(VAPOR)
+	cat $(OUTPUT_FOLDER)/$(VAPOR)
 	java -jar vapor.jar run $(OUTPUT_FOLDER)/$(VAPOR)
 
 javacc:

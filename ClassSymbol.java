@@ -100,7 +100,6 @@ public class ClassSymbol {
     public String getClassName(String varName) {
         for(VariableSymbol v : variableSymbols) {
             if(v.varName == varName) {
-//                System.out.println("CUR:"+v.className+v.varType);
                 return v.className;
             }
         }
