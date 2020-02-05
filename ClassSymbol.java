@@ -21,8 +21,8 @@ public class ClassSymbol {
 				if(m.methodName == token) return true;
 			}
 		}
-		return false;
-	}
+		  return false;
+	  }
 
     public static void printSymbolTable(ArrayList<ClassSymbol> symbolTable) {
         StringBuilder sb = new StringBuilder(512);
@@ -86,6 +86,14 @@ public class ClassSymbol {
             }
         }
         return null;
+    }
+
+    public int findMethodID(String methodName) {
+      for(int i = 0; i < methodSymbols.size(); i++) {
+        MethodSymbol m = methodSymbols.get(i);
+        if(m.methodName == methodName) return i;
+      }
+      return -1;
     }
 
     public int typeOf(String varName) {

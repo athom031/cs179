@@ -618,14 +618,39 @@ public class VaporVisitor implements Visitor {
       n.f0.accept(this);
       String a = temp();
       String object = variableName;
-      //String instr = String.format();
       n.f1.accept(this);
       n.f2.accept(this);
+      String funct = variableName;
 
+      int num = 0;
+      if(object == "this") {
+        ClassSymbol c = symbolTable.get(classIndex);
+        num = c.findMethodID(funct);
+      } else if(allocClass != null) {
+        ClassSymbol c = ClassSymbol.find(symbolTable, b -> b.className==allocClass);
+        num = c.findMethodID(funct);
+        allocClass = null;
+      } else {
+        ClassSymbol c = symbolTable.get(classIndex);
+        MethodSymbol m = c.methodSymbols.get(functionIndex);
+        VariableSymbol v = m.findVar(b->b.varName==object);
+        assert(v != null);
+        ClassSymbol varClass = ClassSymbol.find(symbolTable, b->b.className==v.className);
+        num = varClass.findMethodID(funct);
+      }
+
+      assert(num != -1);
+      num *= 4;
 
       n.f3.accept(this);
       n.f4.accept(this);
+      String params = object + " " + variableName;
       n.f5.accept(this);
+      String ret = temp();
+      System.out.printf("  %s = [%s]\n", a, object);
+      System.out.printf("  %s = [%s + %s]\n", a, a, num);
+      System.out.printf("  %s = call %s(%s)\n", ret, a, params);
+      variableName = ret;
    }
 
    /**
@@ -634,7 +659,11 @@ public class VaporVisitor implements Visitor {
     */
    public void visit(ExpressionList n) {
       n.f0.accept(this);
+      String x = variableName;
+      variableName = "";
       n.f1.accept(this);
+      String y = variableName;
+      variableName = y.length() > 0? x + " " + y : x;
    }
 
    /**
@@ -643,7 +672,9 @@ public class VaporVisitor implements Visitor {
     */
    public void visit(ExpressionRest n) {
       n.f0.accept(this);
+      String x = variableName;
       n.f1.accept(this);
+      variableName = x + " " + variableName;
    }
 
    /**
@@ -666,7 +697,6 @@ public class VaporVisitor implements Visitor {
     */
    public void visit(IntegerLiteral n) {
       n.f0.accept(this);
-      //System.err.println(n.f0.tokenImage);
       variableName = n.f0.tokenImage;
    }
 
@@ -718,6 +748,7 @@ public class VaporVisitor implements Visitor {
       n.f4.accept(this);
    }
 
+   String allocClass = null;
    /**
     * f0 -> "new"
     * f1 -> Identifier()
@@ -727,6 +758,14 @@ public class VaporVisitor implements Visitor {
    public void visit(AllocationExpression n) {
       n.f0.accept(this);
       n.f1.accept(this);
+      String className = variableName;
+      ClassSymbol c = ClassSymbol.find(symbolTable, s->s.className==variableName);
+      int size = c.variableSymbols.size() * 4 + 4; // variable sizes*4 + vtable ptr
+      String t = temp();
+      System.out.printf("  %s = HeapAllocZ(%d)\n", t, size);
+      System.out.printf("  [%s] = :vmt_%s\n", t, c.className);
+      allocClass = variableName;
+      variableName = t;
       n.f2.accept(this);
       n.f3.accept(this);
    }
@@ -747,7 +786,7 @@ public class VaporVisitor implements Visitor {
         return;
       }
 
-      // if 0==0, var=1, if 0!=1, var=0, performs a flip
+      // if 0==0, var=1, if 1!=0, var=0, performs a flip
       System.out.printf("  %s = Eq(%s 0)\n", a, a);
    }
 
