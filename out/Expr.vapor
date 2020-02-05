@@ -1,0 +1,12 @@
+func Main()
+  a = 1
+  ____t0 = Add(a a)
+  b = ____t0
+  ____t1 = MulS(b b)
+  c = ____t1
+  ____t2 = MulS(c c)
+  c = ____t2
+  ____t3 = Sub(c 1)
+  c = ____t3
+  PrintIntS(c)
+  ret

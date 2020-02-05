@@ -339,7 +339,7 @@ public class VaporVisitor implements Visitor {
       n.f2.accept(this);
       String b = variableName;
       n.f3.accept(this);
-      String instr = String.format("  %s = %s", a, b);
+      String instr = String.format("  %d = %d", a, b);
       System.out.println(instr);
    }
 
@@ -356,6 +356,8 @@ public class VaporVisitor implements Visitor {
 
       //TODO: put code here...
       String token = n.f0.f0.tokenImage;
+
+
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -684,8 +686,45 @@ public class VaporVisitor implements Visitor {
    public void visit(Identifier n) {
       // TODO: add the return type of IDENTIFIER
       n.f0.accept(this);
+
+      if(visitingStatement) { //TODO: eventually optimize this, but for now, keep it separate
+        String token = n.f0.tokenImage;
+        ClassSymbol c = symbolTable.get(classIndex);
+        MethodSymbol m = c.methodSymbols.get(functionIndex);
+        if(ClassSymbol.isGlobal(symbolTable, token)) {
+            expressionType = CLASS_TYPE; // TODO: This is a hack...
+        } else if(m.findVar(v->v.varName == token) != null) {
+            VariableSymbol vv = m.findVar(v->v.varName == token);
+            expressionType = vv.varType;
+        } else if(c.findVar(v->v.varName == token) != null) {
+            VariableSymbol vv = c.findVar(v->v.varName==token);
+            expressionType = vv.varType;
+        }
+
+        variableName = token;
+      }
+
+
+      if(!identifyClassType)
+        return;
+
       String token = n.f0.tokenImage;
-      variableName = token;
+
+      //locate the class in the global scope.
+      ClassSymbol c = symbolTable.get(classIndex);
+      VariableSymbol variable = c.findVar(v -> v.varName == token);
+      if(variable != null) {
+        classMessageSend = variable.className;
+        return;
+      }
+
+      //locate among the local variables
+      variable = c.methodSymbols.get(functionIndex).findVar(v -> v.varName == token);
+      if(variable != null) {
+        classMessageSend = variable.className;
+        return;
+      }
+
    }
 
    /**

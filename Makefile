@@ -1,4 +1,4 @@
-FILE=Add
+FILE=Expr#Add
 JAVA=$(FILE).java
 VAPOR=$(FILE).vapor
 FOLDER=phase2-tests
@@ -7,7 +7,7 @@ OUTPUT_FOLDER=out
 run:
 	javac J2V.java
 	cat $(FOLDER)/$(JAVA)
-	java J2V < $(FOLDER)/$(JAVA)    > $(OUTPUT_FOLDER)/$(VAPOR)
+	java J2V < $(FOLDER)/$(JAVA) > $(OUTPUT_FOLDER)/$(VAPOR)
 	##################
 	cat $(OUTPUT_FOLDER)/$(VAPOR)
 	##################
