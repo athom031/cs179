@@ -1,6 +1,9 @@
 class Call {
 	public static void main(String[] a){
-		System.out.println(new A().run());
+		//System.out.println(new A().run());
+    A a;
+    a = new A();
+    System.out.println(a.run());
 	}
 }
 

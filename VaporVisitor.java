@@ -643,8 +643,9 @@ public class VaporVisitor implements Visitor {
       num *= 4;
 
       n.f3.accept(this);
+			variableName = "";
       n.f4.accept(this);
-      String params = object + " " + variableName;
+      String params = variableName.length()>0? object + " " + variableName: object;
       n.f5.accept(this);
       String ret = temp();
       System.out.printf("  %s = [%s]\n", a, object);
