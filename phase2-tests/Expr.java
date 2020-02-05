@@ -4,7 +4,7 @@ class Expr {
     int b;
     a = 10;
     b = 0;
-    while((a < b)) {
+    while(!(a < b)) {
       System.out.println(a);
       a = a - 1;
     }
@@ -15,6 +15,8 @@ class Expr {
 class A {
 
   public int a(int a1, int a2, int a3) {
+    int x;
+    x = this.a(a1, a2, a3);
     return 0;
   }
 

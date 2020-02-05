@@ -89,12 +89,10 @@ public class VaporVisitor implements Visitor {
 
       for(ClassSymbol c : symbolTable) {
         String className = c.className;
-        String x = String.format("const vmt_%s", className);
-        System.out.println(x);
+        System.out.printf("const vmt_%s\n", className);
         for(MethodSymbol m : c.methodSymbols) {
           if(m.methodName == "main") continue;
-          String y = String.format("  :%s.%s", className, m.methodName);
-          System.out.println(y);
+          System.out.printf("  :%s.%s\n", className, m.methodName);
         }
         System.out.println();
       }
@@ -236,8 +234,8 @@ public class VaporVisitor implements Visitor {
         params += " " + v.varName;
       }
 
-      String instr = String.format("func %s.%s(this%s)", c.className, m.methodName, params);
-      System.out.println(instr);
+      System.out.printf("func %s.%s(this%s)\n", c.className, m.methodName, params);
+
 
       n.f0.accept(this);
       n.f1.accept(this);
@@ -255,8 +253,8 @@ public class VaporVisitor implements Visitor {
       n.f12.accept(this);
       functionIndex += 1;
 
-      instr = String.format(" ret %s\n", retValue);
-      System.out.println(instr);
+      System.out.printf("  ret %s\n", retValue);
+
       // we exited a function
    }
 
@@ -364,8 +362,7 @@ public class VaporVisitor implements Visitor {
       n.f2.accept(this);
       String b = variableName;
       n.f3.accept(this);
-      String instr = String.format("  %s = %s", a, b);
-      System.out.println(instr);
+      System.out.printf("  %s = %s\n", a, b);
    }
 
    /**
@@ -406,24 +403,20 @@ public class VaporVisitor implements Visitor {
       String elseLabel = label();
       String endifLabel = label();
       String a = variableName;
-      String instr = String.format("  if0 %s goto :%s", a, elseLabel);
-      System.out.println(instr);
+      System.out.printf("  if0 %s goto :%s\n", a, elseLabel);
 
       n.f3.accept(this);
       n.f4.accept(this);
 
 
-      instr = String.format("  goto :%s", endifLabel);
-      System.out.println(instr);
+      System.out.printf("  goto :%s\n", endifLabel);
 
-      instr = String.format("  %s:", elseLabel);
-      System.out.println(instr);
+      System.out.printf("  %s:\n", elseLabel);
 
       n.f5.accept(this);
       n.f6.accept(this);
 
-      instr = String.format("  %s:", endifLabel);
-      System.out.println(instr);
+      System.out.printf("  %s:\n", endifLabel);
 
    }
 
@@ -438,25 +431,21 @@ public class VaporVisitor implements Visitor {
       String beginLoopLabel = label();
       String endLoopLabel = label();
 
-      String instr = String.format("  %s:", beginLoopLabel);
-      System.out.println(instr);
+      System.out.printf("  %s:\n", beginLoopLabel);
 
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
 
       String a = variableName;
-      instr = String.format("  if0 %s goto :%s", a, endLoopLabel);
-      System.out.println(instr);
+      System.out.printf("  if0 %s goto :%s\n", a, endLoopLabel);
 
       n.f3.accept(this);
       n.f4.accept(this);
 
-      instr = String.format("  goto :%s", beginLoopLabel);
-      System.out.println(instr);
+      System.out.printf("  goto :%s\n", beginLoopLabel);
       
-      instr = String.format("  %s:", endLoopLabel);
-      System.out.println(instr);
+      System.out.printf("  %s:\n", endLoopLabel);
    }
 
    /**
@@ -472,8 +461,7 @@ public class VaporVisitor implements Visitor {
       n.f2.accept(this);
 
       String e = variableName;
-      String instr = String.format("  PrintIntS(%s)", e);
-      System.out.println(instr);
+      System.out.printf("  PrintIntS(%s)\n", e);
       n.f3.accept(this);
       n.f4.accept(this);
    }
@@ -500,30 +488,24 @@ public class VaporVisitor implements Visitor {
     */
 
    public void visit(AndExpression n) {
-      // TODO: AND EXPR needs to be fixed later!!!! --VAPOR OUTPUT
       String andLabel = label();
       String andBool  = temp();
 
-      String instr = String.format("  %s = 0", andBool);
-      System.out.println(instr);
+      System.out.printf("  %s = 0\n", andBool);
 
       n.f0.accept(this);
       String a = variableName;
-      instr = String.format("  if0 %s goto :%s", a, andLabel);
-      System.out.println(instr);
+      System.out.printf("  if0 %s goto :%s\n", a, andLabel);
 
       n.f1.accept(this);
       n.f2.accept(this);
       String b = variableName;
 
-      instr = String.format("  if0 %s goto :%s", b, andLabel);
-      System.out.println(instr);
+      System.out.printf("  if0 %s goto :%s\n", b, andLabel);
 
-      instr = String.format("  %s = 1", andBool);
-      System.out.println(instr);
+      System.out.printf("  %s = 1\n", andBool);
 
-      instr = String.format("  %s:", andLabel);
-      System.out.println(instr);
+      System.out.printf("  %s:\n", andLabel);
 
       variableName = andBool;
    }
@@ -540,8 +522,7 @@ public class VaporVisitor implements Visitor {
       n.f2.accept(this);
       String b = variableName;
       String c = temp();
-      String instr = String.format("  %s = LtS(%s %s)", c, a, b);
-      System.out.println(instr);
+      System.out.printf("  %s = LtS(%s %s)\n", c, a, b);
       variableName = c;
    }
 
@@ -557,8 +538,7 @@ public class VaporVisitor implements Visitor {
       n.f2.accept(this);
       String b = variableName;
       String c = temp();
-      String instr = String.format("  %s = Add(%s %s)", c, a, b);
-      System.out.println(instr);
+      System.out.printf("  %s = Add(%s %s)\n", c, a, b);
       variableName = c;
    }
 
@@ -574,8 +554,7 @@ public class VaporVisitor implements Visitor {
       n.f2.accept(this);
       String b = variableName;
       String c = temp();
-      String instr = String.format("  %s = Sub(%s %s)", c, a, b);
-      System.out.println(instr);
+      System.out.printf("  %s = Sub(%s %s)\n", c, a, b);
       variableName = c;
    }
 
@@ -591,8 +570,7 @@ public class VaporVisitor implements Visitor {
       n.f2.accept(this);
       String b = variableName;
       String c = temp();
-      String instr = String.format("  %s = MulS(%s %s)", c, a, b);
-      System.out.println(instr);
+      System.out.printf("  %s = MulS(%s %s)\n", c, a, b);
       variableName = c;
    }
 
@@ -635,9 +613,16 @@ public class VaporVisitor implements Visitor {
 
 
    public void visit(MessageSend n) {
+      // TODO: this needs to be checked in the case of virtual functions.
+
       n.f0.accept(this);
+      String a = temp();
+      String object = variableName;
+      //String instr = String.format();
       n.f1.accept(this);
       n.f2.accept(this);
+
+
       n.f3.accept(this);
       n.f4.accept(this);
       n.f5.accept(this);
@@ -715,6 +700,7 @@ public class VaporVisitor implements Visitor {
     */
    public void visit(ThisExpression n) {
       n.f0.accept(this);
+      variableName = "this";
    }
 
    /**
@@ -762,8 +748,7 @@ public class VaporVisitor implements Visitor {
       }
 
       // if 0==0, var=1, if 0!=1, var=0, performs a flip
-      String instr = String.format("  %s = Eq(%s 0)", a, a);
-      System.out.println(instr);
+      System.out.printf("  %s = Eq(%s 0)\n", a, a);
    }
 
    /**
