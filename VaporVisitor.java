@@ -339,7 +339,6 @@ public class VaporVisitor implements Visitor {
     * f2 -> "}"
     */
    public void visit(Block n) {
-      //TODO: put code here...
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
@@ -353,7 +352,9 @@ public class VaporVisitor implements Visitor {
     */
    public void visit(AssignmentStatement n) {
 
-      //TODO: put code here...
+      //TODO: this is to be handled in a much more
+      // complex fashion, especially when it comes to
+      // objects.
 
       n.f0.accept(this);
       String a = variableName;
@@ -375,7 +376,6 @@ public class VaporVisitor implements Visitor {
     * f6 -> ";"
     */
    public void visit(ArrayAssignmentStatement n) {
-
       //TODO: put code here...
       String token = n.f0.f0.tokenImage;
       n.f0.accept(this);
