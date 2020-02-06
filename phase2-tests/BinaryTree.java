@@ -302,15 +302,15 @@ class Tree{
 	return ifound ;
     }
 
-    // Invoke the method to really print the tree elements
-    public boolean Print(){
-	Tree current_node;
-	boolean ntb ;
+  // Invoke the method to really print the tree elements
+  public boolean Print(){
+	  Tree current_node;
+	  boolean ntb ;
 
-	current_node = this ;
-	ntb = this.RecPrint(current_node);
-	return true ;
-    }
+	  current_node = this ;
+	  ntb = this.RecPrint(current_node);
+	  return true ;
+  }
 
     // Print the elements of the tree
     public boolean RecPrint(Tree node){

@@ -11,9 +11,6 @@ public class J2V {
       DepthFirstVisitor visitor = new DepthFirstVisitor();
       PassVisitor passVisitor   = new PassVisitor(visitor.symbolTable);
       VaporVisitor vaporVisitor = new VaporVisitor(visitor.symbolTable);
-
-
-
       visitor.visit(goal);     // construct the symboltable
       passVisitor.visit(goal);
       if(visitor.check() && passVisitor.check()) {
@@ -25,10 +22,10 @@ public class J2V {
         System.exit(1);
       }
     } catch(ParseException p) {
-      System.out.println("Parse Error");
+      System.err.println("Parse Error");
       p.printStackTrace();
     } catch(Exception e) {
-      System.out.println("Other kind of error");
+      System.err.println("Other kind of error");
       e.printStackTrace();
     }
   }

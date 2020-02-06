@@ -219,8 +219,7 @@ public class VaporVisitor implements Visitor {
     * f7 -> ( VarDeclaration() )*
     * f8 -> ( Statement() )*
     * f9 -> "return"
-    * f10 -> Expression()
-    * f11 -> ";"
+    * f10 -> Expression() * f11 -> ";"
     * f12 -> "}"
     */
    public void visit(MethodDeclaration n) {
@@ -249,11 +248,17 @@ public class VaporVisitor implements Visitor {
       n.f9.accept(this);
       n.f10.accept(this);
       String retValue = variableName;
+
+			int num = c.findVarID(retValue);
+			if(num!=-1) {
+				retValue=temp();
+				System.out.printf("  %s = [this+%d]\n", retValue, num);
+			}
+
       n.f11.accept(this);
       n.f12.accept(this);
+      System.out.printf("  ret %s\n\n", retValue);
       functionIndex += 1;
-
-      System.out.printf("  ret %s\n", retValue);
 
       // we exited a function
    }
@@ -331,6 +336,7 @@ public class VaporVisitor implements Visitor {
     */
    public void visit(Statement n) {
       n.f0.accept(this);
+      allocClass = null;
    }
 
    /**
@@ -355,10 +361,26 @@ public class VaporVisitor implements Visitor {
       //TODO: this is to be handled in a much more
       // complex fashion, especially when it comes to
       // objects.
-
       n.f0.accept(this);
+
       String a = variableName;
-      //System.err
+      int num = 4;
+
+      // get the current class.
+      ClassSymbol c = symbolTable.get(classIndex);
+      if(c.hasVariable(a)) {
+        for(VariableSymbol v : c.variableSymbols) {
+          //TODO: need to worry about arrays.
+          if(v.varName != a)
+            num += 4;
+          else
+            break;
+        }
+
+        a = String.format("[this+%d]", num);
+      }
+      
+
       n.f1.accept(this);
       n.f2.accept(this);
       String b = variableName;
@@ -610,8 +632,7 @@ public class VaporVisitor implements Visitor {
     * f4 -> ( ExpressionList() )?
     * f5 -> ")"
     */
-
-
+   //
    public void visit(MessageSend n) {
       // TODO: this needs to be checked in the case of virtual functions.
 
@@ -621,22 +642,32 @@ public class VaporVisitor implements Visitor {
       n.f1.accept(this);
       n.f2.accept(this);
       String funct = variableName;
+      ClassSymbol c; MethodSymbol m;
 
       int num = 0;
       if(object == "this") {
-        ClassSymbol c = symbolTable.get(classIndex);
+        c = symbolTable.get(classIndex);
         num = c.findMethodID(funct);
+        m = c.findMethod(funct);
+        allocClass = m.retName;
       } else if(allocClass != null) {
-        ClassSymbol c = ClassSymbol.find(symbolTable, b -> b.className==allocClass);
+        c = ClassSymbol.find(symbolTable, b -> b.className==allocClass);
         num = c.findMethodID(funct);
-        allocClass = null;
+        m = c.findMethod(funct);
+        allocClass = m.retName;
       } else {
-        ClassSymbol c = symbolTable.get(classIndex);
-        MethodSymbol m = c.methodSymbols.get(functionIndex);
+        c = symbolTable.get(classIndex);
+        m = c.methodSymbols.get(functionIndex);
         VariableSymbol v = m.findVar(b->b.varName==object);
+        if(v == null) {
+          v = c.findVar(b->b.varName==object);
+        }
         assert(v != null);
-        ClassSymbol varClass = ClassSymbol.find(symbolTable, b->b.className==v.className);
+        String varName = v.className;
+        ClassSymbol varClass = ClassSymbol.find(symbolTable, b->b.className==varName);
         num = varClass.findMethodID(funct);
+        m = varClass.findMethod(funct);
+        allocClass = m.retName;
       }
 
       assert(num != -1);
@@ -649,7 +680,7 @@ public class VaporVisitor implements Visitor {
       n.f5.accept(this);
       String ret = temp();
       System.out.printf("  %s = [%s]\n", a, object);
-      System.out.printf("  %s = [%s + %s]\n", a, a, num);
+      System.out.printf("  %s = [%s+%s]\n", a, a, num);
       System.out.printf("  %s = call %s(%s)\n", ret, a, params);
       variableName = ret;
    }
@@ -721,9 +752,8 @@ public class VaporVisitor implements Visitor {
     * f0 -> <IDENTIFIER>
     */
    public void visit(Identifier n) {
-      // TODO: add the return type of IDENTIFIER
       n.f0.accept(this);
-      variableName = n.f0.tokenImage;
+			variableName = n.f0.tokenImage;
    }
 
    /**

@@ -4,6 +4,7 @@ public class MethodSymbol {
 
     public String methodName;    // the method name
     public int    retType;       // the return value of the function
+    public String retName;       // name of the object
     public ArrayList<VariableSymbol> parameters      = new ArrayList<VariableSymbol>();
     public ArrayList<VariableSymbol> variableSymbols = new ArrayList<VariableSymbol>();
 

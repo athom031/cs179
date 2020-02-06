@@ -32,7 +32,7 @@ public class ClassSymbol {
                 sb.append(String.format("    %s %s\n", ClassSymbol.type(v), v.varName));
             }
             for(MethodSymbol m : c.methodSymbols) {
-                sb.append(String.format("    func %s -> %s {\n", m.methodName, ClassSymbol.type(m.retType)));
+                sb.append(String.format("    func %s -> %s {\n", m.methodName, ClassSymbol.type(m.retType, m.retName)));
 
                 for(VariableSymbol param : m.parameters) {
                     sb.append(String.format("        %s %s [parameter]\n", ClassSymbol.type(param), param.varName));
@@ -65,6 +65,13 @@ public class ClassSymbol {
             this.methodSymbols.add(m);
         }
         
+    }
+
+    public MethodSymbol findMethod(String methodName) {
+      for(MethodSymbol m : methodSymbols) {
+        if(m.methodName==methodName) return m;
+      }
+      return null;
     }
 
     public static int findType(String name, ArrayList<ClassSymbol> symbolTable, int classIndex, int method) {
@@ -125,6 +132,15 @@ public class ClassSymbol {
        }
     }
 
+    static String type(int a, String s) {
+       switch(a) {
+       case BOOLEAN_TYPE: return "boolean";
+       case INTEGER_TYPE: return "integer";
+       case CLASS_TYPE:   return s;
+       case VOID_TYPE:    return "void";
+       default: return "unknown";
+       }
+    }
 
     static String type(int a) {
        switch(a) {
@@ -150,10 +166,11 @@ public class ClassSymbol {
         return v;
     }
 
-    public MethodSymbol addClassMethod(String methodName, int retType) {
+    public MethodSymbol addClassMethod(String methodName, int retType, String retName) {
         MethodSymbol m = new MethodSymbol();
         m.methodName = methodName;
         m.retType = retType;
+        m.retName = retName;
         methodSymbols.add(m);
         return m;
     }
@@ -209,5 +226,16 @@ public class ClassSymbol {
         }
         return null;
     }
+
+    public int findVarID(String s) {
+			int ret = 4;
+			for(VariableSymbol v : this.variableSymbols) {
+				if(v.varName == s) {
+					return ret;
+				}
+				ret += 4;
+			}
+			return -1;//cannot find.
+		}
 
 }

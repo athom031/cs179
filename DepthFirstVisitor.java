@@ -104,7 +104,7 @@ public class DepthFirstVisitor implements Visitor {
       c.className = n.f1.f0.tokenImage;
       symbolTable.add(c);
 
-      MethodSymbol m = c.addClassMethod("main", VOID_TYPE);
+      MethodSymbol m = c.addClassMethod("main", VOID_TYPE, "void");
       m.addParameter(n.f11.f0.tokenImage, 5, "String []");
 
       this.current = c;
@@ -239,9 +239,11 @@ public class DepthFirstVisitor implements Visitor {
       assert(this.current != null && this.curFunc == null);
       String methodName   = n.f2.f0.tokenImage;
       int retType         = n.f1.f0.which;
+      Identifier ident    = n.f1.f0.which==CLASS_TYPE? (Identifier)n.f1.f0.choice : null;
+			String retName      = ident!=null? ident.f0.tokenImage : null;
       // we entered a function
       if(!this.current.hasMethod(methodName))
-      	this.curFunc = this.current.addClassMethod(methodName, retType);
+      	this.curFunc = this.current.addClassMethod(methodName, retType, retName);
 			else
 				this.curFunc = ClassSymbol.findMethod(symbolTable, this.current.className, methodName);
 			assert(this.curFunc != null);
