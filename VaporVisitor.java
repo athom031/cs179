@@ -356,17 +356,9 @@ public class VaporVisitor implements Visitor {
     * f2 -> Expression()
     * f3 -> ";"
     */
-   public void visit(AssignmentStatement n) {
 
-      //TODO: this is to be handled in a much more
-      // complex fashion, especially when it comes to
-      // objects.
-      n.f0.accept(this);
-
-      String a = variableName;
+   String attemptConvertToObjectMember(String a, boolean thisExpr) {
       int num = 4;
-
-      // get the current class.
       ClassSymbol c = symbolTable.get(classIndex);
       if(c.hasVariable(a)) {
         for(VariableSymbol v : c.variableSymbols) {
@@ -376,14 +368,31 @@ public class VaporVisitor implements Visitor {
           else
             break;
         }
-
-        a = String.format("[this+%d]", num);
+        //support object has ints x, y, z
+        //given x, [this+4]
+        if(!thisExpr) {
+          String t = temp();
+          System.out.printf("  %s = [this+%d]\n", t, num);
+          return t;
+        } else {
+          return String.format("[this+%d]", num);
+        }
       }
-      
+      return a;
+   }
 
+
+   public void visit(AssignmentStatement n) {
+
+      //TODO: this is to be handled in a much more
+      // complex fashion, especially when it comes to
+      // objects.
+      n.f0.accept(this);
+      String a = attemptConvertToObjectMember(variableName, true);
       n.f1.accept(this);
       n.f2.accept(this);
-      String b = variableName;
+      String b = attemptConvertToObjectMember(variableName, false);
+
       n.f3.accept(this);
       System.out.printf("  %s = %s\n", a, b);
    }
@@ -676,7 +685,13 @@ public class VaporVisitor implements Visitor {
       n.f3.accept(this);
 			variableName = "";
       n.f4.accept(this);
-      String params = variableName.length()>0? object + " " + variableName: object;
+      String params = variableName.length()>0? object + "," + variableName: object;
+      String [] parameters = params.split(",");
+      //TODO: this is kinda gibberish...
+      params = "";
+      for(int i = 0; i < parameters.length; i++) {
+        params += attemptConvertToObjectMember(parameters[i], false) + " ";
+      }
       n.f5.accept(this);
       String ret = temp();
       System.out.printf("  %s = [%s]\n", a, object);
@@ -694,8 +709,8 @@ public class VaporVisitor implements Visitor {
       String x = variableName;
       variableName = "";
       n.f1.accept(this);
-      String y = variableName;
-      variableName = y.length() > 0? x + " " + y : x;
+      String y = (variableName);
+      variableName = y.length() > 0? x + "," + y : x;
    }
 
    /**
@@ -704,9 +719,9 @@ public class VaporVisitor implements Visitor {
     */
    public void visit(ExpressionRest n) {
       n.f0.accept(this);
-      String x = variableName;
+      String x = (variableName);
       n.f1.accept(this);
-      variableName = x + " " + variableName;
+      variableName = x + "," + variableName;
    }
 
    /**
