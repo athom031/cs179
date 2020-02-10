@@ -1,4 +1,4 @@
-FILE=LinkedList
+FILE=FacIterative
 JAVA=$(FILE).java
 VAPOR=$(FILE).vapor
 FOLDER=phase2-tests

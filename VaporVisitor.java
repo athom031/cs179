@@ -234,6 +234,11 @@ public class VaporVisitor implements Visitor {
       }
 
       System.out.printf("func %s.%s(this%s)\n", c.className, m.methodName, params);
+      int yy = 4;
+      for(VariableSymbol v : c.variableSymbols) {
+        System.out.printf("  %s = [this+%d]\n", v.varName, yy);
+        yy += 4;
+      }
 
 
       n.f0.accept(this);

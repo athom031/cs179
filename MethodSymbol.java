@@ -14,6 +14,8 @@ public class MethodSymbol {
     }
 
     public void addParameter(String varName, int varType, String className) {
+        if(hasVariable(varName)) return;
+
         VariableSymbol v = new VariableSymbol();
         v.varName = varName;
         v.varType = varType;
