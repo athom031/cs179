@@ -35,7 +35,7 @@ public class VaporVisitor implements Visitor {
    int labelNo = 0;
 
    String temp() {
-    String name = String.format("____t%d", tempNumber);
+    String name = String.format("__t%d", tempNumber);
     tempNumber++;
     return name;
    }
@@ -89,7 +89,7 @@ public class VaporVisitor implements Visitor {
 
       for(ClassSymbol c : symbolTable) {
         String className = c.className;
-        System.out.printf("const vmt_%s\n", className);
+	      System.out.printf("const vmt_%s\n", className);
         for(MethodSymbol m : c.methodSymbols) {
           if(m.methodName == "main") continue;
           System.out.printf("  :%s.%s\n", className, m.methodName);
@@ -152,10 +152,6 @@ public class VaporVisitor implements Visitor {
       classIndex = classIndex + 1;
       functionIndex = 0;
       n.f0.accept(this);
-
-
-
-
    }
 
    /**
@@ -495,7 +491,6 @@ public class VaporVisitor implements Visitor {
       n.f0.accept(this);
       n.f1.accept(this);
       n.f2.accept(this);
-
       String e = variableName;
       System.out.printf("  PrintIntS(%s)\n", e);
       n.f3.accept(this);
@@ -646,7 +641,6 @@ public class VaporVisitor implements Visitor {
     * f4 -> ( ExpressionList() )?
     * f5 -> ")"
     */
-   //
    public void visit(MessageSend n) {
       // TODO: this needs to be checked in the case of virtual functions.
 
