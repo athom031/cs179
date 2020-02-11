@@ -411,12 +411,26 @@ public class VaporVisitor implements Visitor {
       //TODO: put code here...
       String token = n.f0.f0.tokenImage;
       n.f0.accept(this);
+      String a = variableName;
       n.f1.accept(this);
       n.f2.accept(this);
+      String b = variableName;
       n.f3.accept(this);
       n.f4.accept(this);
       n.f5.accept(this);
+      String c = variableName;
+      String d = temp();
+      String e = temp(); 
+      System.out.printf("  %s = MulS(%s 4)\n", e, b);
+      System.out.printf("  %s = Add(%s %s)\n", d, a, e);
+      System.out.printf("  [%s] = %s\n", d,c);
+
+    
+//      System.out.printf("  [%s + %s] = %s\n", a,b,c);
       n.f6.accept(this);
+
+
+
    }
 
    /**
@@ -613,12 +627,19 @@ public class VaporVisitor implements Visitor {
     */
    public void visit(ArrayLookup n) {
       n.f0.accept(this);
+      String a = variableName;
       // check that the variable is an array type
       n.f1.accept(this);
       n.f2.accept(this);
+      String b = variableName;
+      String t = temp();
+      System.out.printf("  %s = MulS(%s 4)\n",t,b);
+      String t1 = temp();
+      System.out.printf("  %s = Add(%s %s)\n", t1, a, t);
+      System.out.printf("  %s = [%s]\n", t1, t1);
       // check that the index is an integer type
       n.f3.accept(this);
-
+      variableName = String.format("%s", t1);
    }
 
    /**
@@ -790,7 +811,16 @@ public class VaporVisitor implements Visitor {
       n.f1.accept(this);
       n.f2.accept(this);
       n.f3.accept(this);
+      //variableName now holds Expression String  
+      String t = temp(); //create temp for Expression Value * 4 Bytes
+      System.out.printf(" %s = MulS(%s 4)\n", t, variableName);
+		// use MULS to output  multiplication of string value
+	   
+      String t1 = temp();
+      System.out.printf(" %s = HeapAllocZ(%s)\n", t1, t);   
+      //creates temp for the memory allocated array
       n.f4.accept(this);
+      variableName = t1;
    }
 
    String allocClass = null;
