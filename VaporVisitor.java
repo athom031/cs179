@@ -423,8 +423,9 @@ public class VaporVisitor implements Visitor {
       String e = temp(); 
       System.out.printf("  %s = MulS(%s 4)\n", e, b);
       System.out.printf("  %s = Add(%s %s)\n", d, a, e);
+      System.out.printf("  %s = Add(%s 4)\n", d, d);
       System.out.printf("  [%s] = %s\n", d,c);
-
+//"[%s]", a
     
 //      System.out.printf("  [%s + %s] = %s\n", a,b,c);
       n.f6.accept(this);
@@ -636,6 +637,7 @@ public class VaporVisitor implements Visitor {
       System.out.printf("  %s = MulS(%s 4)\n",t,b);
       String t1 = temp();
       System.out.printf("  %s = Add(%s %s)\n", t1, a, t);
+      System.out.printf("  %s = Add(%s %s)\n", t1, t1, 4);
       System.out.printf("  %s = [%s]\n", t1, t1);
       // check that the index is an integer type
       n.f3.accept(this);
@@ -817,7 +819,9 @@ public class VaporVisitor implements Visitor {
 		// use MULS to output  multiplication of string value
 	   
       String t1 = temp();
-      System.out.printf(" %s = HeapAllocZ(%s)\n", t1, t);   
+      System.out.printf(" %s = Add(%s 4)\n", t, t);
+      System.out.printf(" %s = HeapAllocZ(%s)\n", t1, t);
+      System.out.printf("[%s] = %s\n", t1, variableName);     
       //creates temp for the memory allocated array
       n.f4.accept(this);
       variableName = t1;
