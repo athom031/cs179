@@ -337,7 +337,9 @@ public class VaporVisitor implements Visitor {
     */
    public void visit(Statement n) {
       n.f0.accept(this);
+      allocation = false;
       allocClass = null;
+      messageSend = false;
    }
 
    /**
@@ -396,6 +398,24 @@ public class VaporVisitor implements Visitor {
 
       n.f3.accept(this);
       System.out.printf("  %s = %s\n", a, b);
+
+      if(allocation) {
+        ClassSymbol c = symbolTable.get(classIndex);
+        int yy = 4;
+        for(VariableSymbol v : c.variableSymbols) {
+          if(v.varType == ARRAY_TYPE || v.varType == CLASS_TYPE) {
+            System.out.printf("  %s = [this+%d]\n", v.varName, yy);
+          }
+          yy += 4;
+        }
+      } else if(messageSend) {
+        ClassSymbol c = symbolTable.get(classIndex);
+        int yy = 4;
+        for(VariableSymbol v : c.variableSymbols) {
+          System.out.printf("  %s = [this+%d]\n", v.varName, yy);
+          yy += 4;
+        }
+      }
    }
 
    /**
@@ -511,6 +531,8 @@ public class VaporVisitor implements Visitor {
       n.f3.accept(this);
       n.f4.accept(this);
    }
+
+   boolean messageSend = false;
 
    /**
     * f0 -> AndExpression()
@@ -720,6 +742,8 @@ public class VaporVisitor implements Visitor {
       System.out.printf("  %s = [%s+%s]\n", a, a, num);
       System.out.printf("  %s = call %s(%s)\n", ret, a, params);
       variableName = ret;
+
+      messageSend = true;
    }
 
    /**
@@ -801,6 +825,9 @@ public class VaporVisitor implements Visitor {
       variableName = "this";
    }
 
+
+   boolean allocation = false;
+
    /**
     * f0 -> "new"
     * f1 -> "int"
@@ -825,6 +852,7 @@ public class VaporVisitor implements Visitor {
       //creates temp for the memory allocated array
       n.f4.accept(this);
       variableName = t1;
+      allocation = true;
    }
 
    String allocClass = null;
@@ -847,6 +875,7 @@ public class VaporVisitor implements Visitor {
       variableName = t;
       n.f2.accept(this);
       n.f3.accept(this);
+      allocation = true;
    }
 
    /**

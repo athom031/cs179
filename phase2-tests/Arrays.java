@@ -44,7 +44,23 @@ class MainClass {
       System.out.println(array[i]);
       i=i+1;
     }
+
+    array[9] = 1000;
+    System.out.println(array[9]);
+    array[8] = 999;
+    System.out.println(array[8]);
+
+    i=0;
+    while(i < 10) {
+      System.out.println(array[i]);
+      i=i+1;
+    }
+
+
+
+
   }
+
 
 }
 

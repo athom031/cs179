@@ -17,6 +17,7 @@ class LS {
     public int Start(int sz){
 	int aux01 ;
 	int aux02 ;
+  int i;
 
 	aux01 = this.Init(sz);
 	aux02 = this.Print();
@@ -76,6 +77,7 @@ class LS {
     // initialize array of integers with some
     // some sequence
     public int Init(int sz){
+  int i ;
 	int j ;
 	int k ;
 	int aux01 ;
@@ -86,6 +88,7 @@ class LS {
 	
 	j = 1 ;
 	k = size + 1 ;
+  System.out.println(size);
 	while (j < (size)) {
 	    aux01 = 2 * j ;
 	    aux02 = k - 3 ;
@@ -93,6 +96,14 @@ class LS {
 	    j = j + 1 ;
 	    k = k - 1 ;
 	}
+ 
+  i = 0; 
+  while(i < sz) {
+    System.out.println(number[i]);
+    i=i+1;
+  }
+
+
 	return 0 ;	
     }
 
