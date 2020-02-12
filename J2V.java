@@ -14,19 +14,19 @@ public class J2V {
       visitor.visit(goal);     // construct the symboltable
       passVisitor.visit(goal);
       if(visitor.check() && passVisitor.check()) {
-        System.err.println("Program type checked successfully");
+        //System.err.println("Program type checked successfully");
         vaporVisitor.visit(goal);
 
       } else {
-        System.err.println("Type error");
+        //System.err.println("Type error");
         System.exit(1);
       }
     } catch(ParseException p) {
-      System.err.println("Parse Error");
-      p.printStackTrace();
+      //System.err.println("Parse Error");
+      //p.printStackTrace();
     } catch(Exception e) {
-      System.err.println("Other kind of error");
-      e.printStackTrace();
+      //System.err.println("Other kind of error");
+      //e.printStackTrace();
     }
   }
 
