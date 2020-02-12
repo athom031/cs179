@@ -54,8 +54,6 @@ class LS {
 	j = 1 ;
 	ls01 = false ;
 	ifound = 0 ;
-	
-	//System.out.println(num);
 	while (j < (size)) {
 	    aux01 = number[j] ;
 	    aux02 = num + 1 ;
@@ -88,7 +86,6 @@ class LS {
 	
 	j = 1 ;
 	k = size + 1 ;
-  System.out.println(size);
 	while (j < (size)) {
 	    aux01 = 2 * j ;
 	    aux02 = k - 3 ;
@@ -97,13 +94,6 @@ class LS {
 	    k = k - 1 ;
 	}
  
-  i = 0; 
-  while(i < sz) {
-    System.out.println(number[i]);
-    i=i+1;
-  }
-
-
 	return 0 ;	
     }
 

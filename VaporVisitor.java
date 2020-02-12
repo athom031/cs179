@@ -353,24 +353,17 @@ public class VaporVisitor implements Visitor {
       n.f2.accept(this);
    }
 
-   /**
-    * f0 -> Identifier()
-    * f1 -> "="
-    * f2 -> Expression()
-    * f3 -> ";"
-    */
-
    String attemptConvertToObjectMember(String a, boolean thisExpr) {
       int num = 4;
       ClassSymbol c = symbolTable.get(classIndex);
       if(c.hasVariable(a)) {
         for(VariableSymbol v : c.variableSymbols) {
-          //TODO: need to worry about arrays.
           if(v.varName != a)
             num += 4;
           else
             break;
         }
+        System.out.printf("  %s = [this+%d]\n", a, num);
         //support object has ints x, y, z
         //given x, [this+4]
         if(!thisExpr) {
@@ -384,6 +377,12 @@ public class VaporVisitor implements Visitor {
       return a;
    }
 
+   /**
+    * f0 -> Identifier()
+    * f1 -> "="
+    * f2 -> Expression()
+    * f3 -> ";"
+    */
 
    public void visit(AssignmentStatement n) {
 
@@ -391,13 +390,30 @@ public class VaporVisitor implements Visitor {
       // complex fashion, especially when it comes to
       // objects.
       n.f0.accept(this);
+      String aaaa = variableName;
       String a = attemptConvertToObjectMember(variableName, true);
+
+
       n.f1.accept(this);
       n.f2.accept(this);
       String b = attemptConvertToObjectMember(variableName, false);
 
       n.f3.accept(this);
       System.out.printf("  %s = %s\n", a, b);
+
+      {
+        int num = 4;
+        ClassSymbol c = symbolTable.get(classIndex);
+        if(c.hasVariable(aaaa)) {
+          for(VariableSymbol v : c.variableSymbols) {
+            if(v.varName != aaaa)
+              num += 4;
+            else
+              break;
+          }
+          System.out.printf("  %s = [this+%d]\n", aaaa, num);
+        }
+      }
 
       if(allocation) {
         ClassSymbol c = symbolTable.get(classIndex);
@@ -842,13 +858,12 @@ public class VaporVisitor implements Visitor {
       n.f3.accept(this);
       //variableName now holds Expression String  
       String t = temp(); //create temp for Expression Value * 4 Bytes
-      System.out.printf(" %s = MulS(%s 4)\n", t, variableName);
-		// use MULS to output  multiplication of string value
-	   
+      System.out.printf("  %s = MulS(%s 4)\n", t, variableName);
+		  // use MULS to output  multiplication of string value
       String t1 = temp();
-      System.out.printf(" %s = Add(%s 4)\n", t, t);
-      System.out.printf(" %s = HeapAllocZ(%s)\n", t1, t);
-      System.out.printf("[%s] = %s\n", t1, variableName);     
+      System.out.printf("  %s = Add(%s 4)\n", t, t);
+      System.out.printf("  %s = HeapAllocZ(%s)\n", t1, t);
+      System.out.printf("  [%s] = %s\n", t1, variableName);     
       //creates temp for the memory allocated array
       n.f4.accept(this);
       variableName = t1;
