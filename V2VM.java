@@ -1,10 +1,10 @@
 import cs132.util.CommandLineLauncher;
 import cs132.util.CommandLineLauncher.Exit;
 import cs132.util.ProblemException;
-import cs132.util.VFunction;
 import cs132.vapor.parser.VaporParser;
 import cs132.vapor.ast.VaporProgram;
 import cs132.vapor.ast.VBuiltIn.Op;
+import cs132.vapor.ast.*;
 import java.io.*;
 
 class V2VM extends CommandLineLauncher.TextOutput {
@@ -19,7 +19,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
     try {
       VaporProgram p = V2VM.parseVapor(in, System.err);
       for(VFunction f : p.functions) {
-
+        System.err.println(f);
       }
     } catch(IOException e) {
       System.err.println(e);
