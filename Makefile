@@ -10,6 +10,12 @@ run:
 	cat $(OUTPUT_FOLDER)/$(VAPOR)
 	java -jar vapor.jar run $(OUTPUT_FOLDER)/$(VAPOR)
 
+vaporm:
+	javac V2VM.java
+	java V2VM < $(FILE).vapor > $(FILE).vaporm
+	java -jar vapor.jar run -mips $(FILE).vaporm
+
+
 debug:
 	javac J2V.java
 	jdb J2V < $(FOLDER)/$(JAVA)
