@@ -127,11 +127,13 @@ class List{
 	aux01 = this ;
 	prev = this ;
 	var_end = end;
-	var_elem = elem ;
+	var_elem = elem;
+        System.out.println(0-123456789);
 	while ((!var_end) && (!ret_val)){
 	    if (e.Equal(var_elem)){
 		ret_val = true ;
 		if (aux04 < 0) { 
+                    System.out.println(0-5555);
 		    // delete first element
 		    my_head = aux01.GetNext() ;
 		} 
@@ -140,17 +142,24 @@ class List{
 		    System.out.println(0-555);
 		    aux05 = prev.SetNext(aux01.GetNext());
 		    System.out.println(0-555);
-		    
 		}
-	    } else nt = 0 ;
+	    } else {
+               nt = 0 ;
+               System.out.println(0-9999);
+            }
 	    if (!ret_val){
+                System.out.println(0-333999666);
 		prev = aux01 ;
 		aux01 = aux01.GetNext() ;
 		var_end = aux01.GetEnd();
 		var_elem = aux01.GetElem();
 		aux04 = 1 ; 
-	    } else nt = 0 ;
+	    } else {
+                nt = 0 ;
+                System.out.println(0-1234);
+            }
 	}
+        System.out.println(0-123456789);
 	return my_head ;
     }
     
