@@ -916,9 +916,10 @@ public class VaporVisitor implements Visitor {
         variableName = "0";
         return;
       }
-
       // if 0==0, var=1, if 1!=0, var=0, performs a flip
-      System.out.printf("  %s = Eq(%s 0)\n", a, a);
+      String tmp = temp(); 
+      System.out.printf("  %s = Eq(%s 0)\n", tmp, a);
+      variableName = tmp;
    }
 
    /**
