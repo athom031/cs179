@@ -136,6 +136,7 @@ class List{
 		    my_head = aux01.GetNext() ;
 		} 
 		else{ // delete a non first element
+                    System.out.println(999999);
 		    System.out.println(0-555);
 		    aux05 = prev.SetNext(aux01.GetNext());
 		    System.out.println(0-555);
