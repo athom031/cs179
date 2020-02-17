@@ -1,4 +1,4 @@
-FILE=LinearSearch
+FILE=Vars
 JAVA=$(FILE).java
 VAPOR=$(FILE).vapor
 FOLDER=phase2-tests
