@@ -444,7 +444,6 @@ public class VaporVisitor implements Visitor {
     * f6 -> ";"
     */
    public void visit(ArrayAssignmentStatement n) {
-      //TODO: put code here...
       String token = n.f0.f0.tokenImage;
       n.f0.accept(this);
       String a = variableName;
@@ -457,17 +456,18 @@ public class VaporVisitor implements Visitor {
       String c = variableName;
       String d = temp();
       String e = temp(); 
+      String lab = label();
+
+      System.out.printf("  %s = [%s]\n", d, a);
+      System.out.printf("  %s = LtS(%s %s)\n", d, b, d);
+      System.out.printf("  if %s goto :%s\n", d, lab);
+      System.out.printf("  Error(\"array index out of bounds\")\n");
+      System.out.printf("  %s:\n", lab);
       System.out.printf("  %s = MulS(%s 4)\n", e, b);
       System.out.printf("  %s = Add(%s %s)\n", d, a, e);
       System.out.printf("  %s = Add(%s 4)\n", d, d);
       System.out.printf("  [%s] = %s\n", d,c);
-//"[%s]", a
-    
-//      System.out.printf("  [%s + %s] = %s\n", a,b,c);
       n.f6.accept(this);
-
-
-
    }
 
    /**
@@ -672,6 +672,14 @@ public class VaporVisitor implements Visitor {
       n.f2.accept(this);
       String b = variableName;
       String t = temp();
+      String lab = label();
+
+      System.out.printf("  %s = [%s]\n", t, a);
+      System.out.printf("  %s = LtS(%s %s)\n", t, b, t);
+      System.out.printf("  if %s goto :%s\n", t, lab);
+      System.out.printf("  Error(\"array index out of bounds\")\n");
+      System.out.printf("  %s:\n", lab);
+
       System.out.printf("  %s = MulS(%s 4)\n",t,b);
       String t1 = temp();
       System.out.printf("  %s = Add(%s %s)\n", t1, a, t);
@@ -908,9 +916,10 @@ public class VaporVisitor implements Visitor {
         variableName = "0";
         return;
       }
-
       // if 0==0, var=1, if 1!=0, var=0, performs a flip
-      System.out.printf("  %s = Eq(%s 0)\n", a, a);
+      String tmp = temp(); 
+      System.out.printf("  %s = Eq(%s 0)\n", tmp, a);
+      variableName = tmp;
    }
 
    /**

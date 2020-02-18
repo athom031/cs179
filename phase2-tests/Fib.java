@@ -1,39 +1,28 @@
-class Main{
-	public static void main(String[] a){
-    int i;
-    i = 0;
-    while(i < 20) {
-      System.out.println(new Fib().fib(i));
-      i = i+1;
-    }
-	}
+class Silly {
+  public static void main(String[] a){
+    System.out.println(new Fib().fib(5));
+  }
 }
 
 class Fib {
 
-  public int dummy4() {
-    return 0;
-  }
-
-  public int dummy3() {
-    return 0;
-  }
-
-  public int dummy2() {
-    return 0;
-  }
-
-  public int dummy1() {
-    return 0;
-  }
-
   public int fib(int n) {
-    int answer;
-    if(n < 2) {
-      answer = n;
-    } else {
-      answer = (this.fib(n-1)) + (this.fib(n-2));
+    int [] array; 
+    int b;
+    int c;
+    int i;
+    array = new int[n];
+    array[0] = 1;
+    array[1] = 1;
+    i=2;
+    while(i<n) {
+      //c=array[i-1];
+      //b=array[i-2];
+      //array[i]=i;
+      i=i+1;
     }
-    return answer;
+    c = array[n-1];
+   
+    return ;
   }
 }
