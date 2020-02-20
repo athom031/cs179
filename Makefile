@@ -30,7 +30,4 @@ test:
 
 clean:
 	rm *.class
-	rm visitor/*.class
-	rm syntaxtree/*.class
-	rm $(OUTPUT_FOLDER)/*
 

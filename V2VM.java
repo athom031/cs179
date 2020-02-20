@@ -2,7 +2,6 @@ import cs132.util.CommandLineLauncher;
 import cs132.util.CommandLineLauncher.Exit;
 import cs132.util.ProblemException;
 import cs132.vapor.parser.VaporParser;
-import cs132.vapor.ast.VaporProgram;
 import cs132.vapor.ast.VBuiltIn.Op;
 import cs132.vapor.ast.VInstr.Visitor;
 import cs132.vapor.ast.*;
@@ -22,6 +21,10 @@ class V2VM extends CommandLineLauncher.TextOutput {
       InstructionVisitor visitor = new InstructionVisitor();
       for(VFunction function : p.functions) {
         System.err.println(function.ident);
+        for(String v : function.vars) {
+          System.err.println("  vars: "+ v);
+        }
+
         for(VInstr instr : function.body) {
           instr.accept(visitor);
         }
@@ -36,7 +39,6 @@ class V2VM extends CommandLineLauncher.TextOutput {
     boolean allowLocals = true;
     String [] registers = null;
     boolean allowStack = false;
-
     try {
       return VaporParser.run(new InputStreamReader(in), 
                              1, 
@@ -57,42 +59,105 @@ class V2VM extends CommandLineLauncher.TextOutput {
 
     @Override
     public void visit(VAssign a) throws Exception {
-      System.err.println("VAssign");
+      VVarRef dest = a.dest;
+      VOperand src = a.source;
+      System.err.printf("  MOV %s, %s\n", dest, src);
     }
 
     @Override
     public void visit(VBranch b) throws Exception {
-      System.err.println("VBranch");
+      boolean positive = b.positive;
+      VLabelRef<VCodeLabel> target = b.target;
+      VOperand value = b.value;
+      System.err.printf("  BRCH %s [%s] %s\n", positive, target, value);
     }
 
     @Override
     public void visit(VBuiltIn b) throws Exception {
-      System.err.println("VBuiltIn");
+      VOperand [] args = b.args;
+      VVarRef dest = b.dest;
+      VBuiltIn.Op op = b.op;
+      switch(op.name) {
+      case "Add": {
+        System.err.printf("  %s %s, %s, %s\n", op.name, dest, args[0], args[1]);
+        break;
+      }
+
+      case "Sub": {
+        System.err.printf("  %s %s, %s, %s\n", op.name, dest, args[0], args[1]);
+        break;
+      }
+
+      case "MultS": {
+        System.err.printf("  %s %s, %s, %s\n", op.name, dest, args[0], args[1]);
+        break;
+      }
+
+      case "Eq": {
+        break;
+      }
+
+      case "Lt": {
+        break;
+      }
+
+      case "LtS": {
+        break;
+      }
+
+      case "PrintIntS": {
+        System.err.printf("  %s(%s)\n", op.name, args[0]);
+        break;
+      }
+
+      case "HeapAllocZ": {
+        break;
+      }
+
+      case "Error": {
+        break;
+      }
+
+      default: {
+        System.err.printf("What the fuck???\n");
+        break;
+      }
+
+      }
     }
 
     @Override
     public void visit(VCall c) throws Exception {
-      System.err.println("VCall");
+      VAddr<VFunction> addr = c.addr;
+      VOperand [] args = c.args;
+      VVarRef.Local dest = c.dest;
+      System.err.printf("  %s = Call %s(%s)\n", dest, addr, args);
     }
 
     @Override
     public void visit(VGoto g) throws Exception {
-      System.err.println("VGoto");
+      VAddr<VCodeLabel> target = g.target;
+      System.err.printf("  Goto: %s\n", target);
     }
 
     @Override
     public void visit(VMemRead r) throws Exception {
-      System.err.println("VMemRead");
+      VVarRef dest = r.dest;
+      VMemRef src = r.source;
+      System.err.printf(" MEM_READ %s, %s\n", dest, src);
     }
 
     @Override
     public void visit(VMemWrite w) throws Exception {
-      System.err.println("VMemWrite");
+      VMemRef dest = w.dest;
+      VOperand src = w.source;
+      System.err.printf("  MEM_WRITE %s, %s\n", dest, src);
     }
 
     @Override
     public void visit(VReturn r) throws Exception {
-      System.err.println("VReturn");
+      VOperand value = r.value;
+      System.err.printf("  RET %s\n", value==null? "" : value);
     }
   }
 
