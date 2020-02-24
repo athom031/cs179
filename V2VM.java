@@ -9,10 +9,97 @@ import java.io.*;
 
 class V2VM extends CommandLineLauncher.TextOutput {
 
-
   public static void main(String[] args) {
-    CommandLineLauncher.run(new V2VM(), args);
+    //CommandLineLauncher.run(new V2VM(), args);
 
+    boolean [][] matrix = new boolean[6][6];
+    V2VM.edge(matrix, 0, 1);
+    V2VM.edge(matrix, 1, 2);
+    V2VM.edge(matrix, 0, 2);
+    V2VM.edge(matrix, 2, 5);
+    V2VM.edge(matrix, 3, 4);
+    V2VM.edge(matrix, 3, 4);
+    V2VM.edge(matrix, 4, 5);
+    V2VM.edge(matrix, 3, 5);
+
+    int [] colors = V2VM.graphColor(matrix, 3);
+    for(int i = 0; i < colors.length; i++) {
+      System.err.println(colors[i]);
+    }
+  }
+
+  public static int [] graphColor(boolean [][] matrix, int maxColor) {
+    assert(matrix != null && matrix.length == matrix[0].length);
+    int size = matrix.length;
+    int [] nodeStack = new int[size];
+    boolean [][] edgeStack = new boolean[size][size];
+    int top = -1;
+
+    int [] colors = new int[size];
+    boolean repeat = false;
+    do {
+      repeat = false;
+      for(int i = 0; i < size; i++) {
+        int edgeCount = numEdges(matrix[i]);
+        if(edgeCount != 0 && edgeCount < maxColor) {
+          repeat = true;
+          top++;
+          nodeStack[top] = i;
+          for(int j = 0; j < size; j++) {
+            edgeStack[top][j] = matrix[i][j];
+            if(matrix[i][j] == true) {
+              matrix[i][j] = false;
+              matrix[j][i] = false;
+            }
+          }
+        }
+      }
+    } while(repeat==true);
+
+
+    boolean [] col = new boolean[size];
+    while(top > -1) {
+      int i = nodeStack[top];
+      for(int j = 0; j < size; j++) {
+        if(edgeStack[top][j] == true) {
+          matrix[i][j] = true;
+          matrix[j][i] = true;
+        }
+      }
+
+      for(int j = 0; j < size; j++) {
+        col[j] = false;
+      }
+
+      for(int j = 0; j < size; j++) {
+        if(matrix[i][j]==true) {
+          col[colors[j]] = true;
+        }
+      }
+
+      for(int j = 0; j < size; j++) {
+        if(col[j]==false) {
+          colors[i] = j;
+          break;
+        }
+      }
+      top--;
+    }
+
+    return colors;
+  }
+
+  public static void edge(boolean [][] matrix, int x, int y) {
+    matrix[x][y] = true;
+    matrix[y][x] = true;
+  }
+
+  public static int numEdges(boolean [] row) {
+    int count = 0;
+    for(boolean r : row)
+      if(r)
+        count++;
+    return count;
   }
 
   public void run(PrintWriter out, InputStream in, PrintWriter err, String [] args) throws Exit {
@@ -88,20 +175,23 @@ class V2VM extends CommandLineLauncher.TextOutput {
         break;
       }
 
-      case "MultS": {
+      case "MulS": {
         System.err.printf("  %s %s, %s, %s\n", op.name, dest, args[0], args[1]);
         break;
       }
 
       case "Eq": {
+        System.err.printf("  %s=%s %s, %s\n", dest, op.name, args[0], args[1]);
         break;
       }
 
       case "Lt": {
+        System.err.printf("  %s=%s %s, %s\n", dest, op.name, args[0], args[1]);
         break;
       }
 
       case "LtS": {
+        System.err.printf("  %s=%s %s, %s\n", dest, op.name, args[0], args[1]);
         break;
       }
 
@@ -111,15 +201,17 @@ class V2VM extends CommandLineLauncher.TextOutput {
       }
 
       case "HeapAllocZ": {
+        System.err.printf("  %s=%s(%s)\n", dest, op.name, args[0]);
         break;
       }
 
       case "Error": {
+        System.err.printf("  %s(\"%s\")\n", op.name, args[0]);
         break;
       }
 
       default: {
-        System.err.printf("What the fuck???\n");
+        System.err.println("WTF "+ op.name);
         break;
       }
 

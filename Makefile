@@ -30,4 +30,4 @@ test:
 
 clean:
 	rm *.class
-
+	rm *.vaporm
