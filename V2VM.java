@@ -21,7 +21,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
       for(VFunction function : p.functions) {
         String funcName = function.ident;
         int inVar = function.params.length < 3? function.params.length : 3;
-        int outVar = function.params.length < 3? 0 : function.params.length-3;
+        int outVar = 10;//function.params.length < 3? 0 : function.params.length-3;
         int localVar = 8;
         visitor.vars = function.vars;
         visitor.params = function.params;
@@ -31,22 +31,24 @@ class V2VM extends CommandLineLauncher.TextOutput {
         int instrIndex = 0;
         int i = 0;
 
-        VCodeLabel label = function.labels[labelIndex]; 
-        VInstr instr = function.body[instrIndex];
+        VCodeLabel label = function.labels==null || function.labels.length==0? null : function.labels[labelIndex]; 
+        VInstr instr = function.body==null || function.body.length==0? null : function.body[instrIndex];
 
         while(true) {
-          if(label.sourcePos.line == i) {
+          // print out the label
+          if(label != null && label.sourcePos.line == i) {
             System.out.printf("  %s:\n", label.ident);
-            System.err.println("LABEL  : "+i);
             labelIndex++;
             if(labelIndex < function.labels.length) {
               label = function.labels[labelIndex];
+            } else {
+              label = null;
             }
           }
-
+          
+          // print out the instruction
           if(instr.sourcePos.line == i) {
             instr.accept(visitor);
-            System.err.println("INSTR  : "+i);
             if(instr instanceof VReturn) 
               break;
             instrIndex++;
@@ -59,7 +61,8 @@ class V2VM extends CommandLineLauncher.TextOutput {
         }
       }
     } catch(Exception e) {
-      System.err.println(e);
+      //System.err.println(e);
+      e.printStackTrace();
     }
   }
 
@@ -130,56 +133,41 @@ class V2VM extends CommandLineLauncher.TextOutput {
       }
 
       case "Sub": {
-
         String d = mapToRegister(dest.toString());
         String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
         String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
-
         System.out.printf("  %s = %s(%s %s)\n", d, op.name, a0, a1);
         break;
       }
 
       case "MulS": {
-
         String d = mapToRegister(dest.toString());
         String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
         String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
-
         System.out.printf("  %s = %s(%s %s)\n", d, op.name, a0, a1);
         break;
       }
 
       case "Eq": {
-
-
         String d = mapToRegister(dest.toString());
         String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
         String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
-
         System.out.printf("  %s = %s(%s %s)\n", d, op.name, a0, a1);
         break;
       }
 
       case "Lt": {
-
         String d = mapToRegister(dest.toString());
         String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
         String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
-
-
-
         System.out.printf("  %s = %s(%s %s)\n", d, op.name, a0, a1);
         break;
       }
 
       case "LtS": {
-
         String d = mapToRegister(dest.toString());
         String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
         String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
-
-
-
         System.out.printf("  %s = %s(%s %s)\n", d, op.name, a0, a1);
         break;
       }
@@ -191,15 +179,13 @@ class V2VM extends CommandLineLauncher.TextOutput {
       }
 
       case "HeapAllocZ": {
-
         String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
-
         System.out.printf("  %s = %s(%s)\n", dest, op.name, a0);
         break;
       }
 
       case "Error": {
-        System.out.printf("  %s(\"%s\")\n", op.name, args[0]);
+        System.out.printf("  %s(%s)\n", op.name, args[0]);
         break;
       }
 
@@ -219,11 +205,11 @@ class V2VM extends CommandLineLauncher.TextOutput {
       int min = args.length < 3? args.length : 3;
 
       for(int i = 0; i < min; i++) {
-        System.out.printf("  $a%d = [%s]\n", i, args[i]);
+        System.out.printf("  $a%d = %s\n", i, args[i]);
       }
 
       for(int i = 3; i < args.length; i++) {
-        System.out.printf("  out[%d] = [%d]\n", i-3, args[i]);
+        System.out.printf("  out[%d] = %s\n", i-3, args[i]);
       }
 
       System.out.printf("  call %s\n", addr);
@@ -240,20 +226,25 @@ class V2VM extends CommandLineLauncher.TextOutput {
     public void visit(VMemRead r) throws Exception {
       VVarRef dest = r.dest;
       VMemRef src = r.source;
-      System.out.printf(" [%s] = %s\n", dest, src);
+      String d = mapToRegister(dest.toString());
+      String s = mapToRegister(src.toString());
+      System.out.printf("  [%s] = %s\n", d, s);
     }
 
     @Override
     public void visit(VMemWrite w) throws Exception {
       VMemRef dest = w.dest;
       VOperand src = w.source;
-      System.out.printf("  %s = [%s]\n", dest, src);
+      String d = mapToRegister(dest.toString());
+      String s = mapToRegister(src.toString());
+      System.out.printf("  %s = [%s]\n", d, s);
     }
 
     @Override
     public void visit(VReturn r) throws Exception {
       VOperand value = r.value;
       if(value != null) {
+        String v = (value instanceof VLitInt)? value.toString() : mapToRegister(value.toString());
         System.out.printf("  $v0 = %s\n", value);
       }
       System.out.printf("  ret\n");
