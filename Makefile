@@ -1,4 +1,4 @@
-FILE=Factorial#MoreThan4
+FILE=MoreThan4
 JAVA=$(FILE).java
 VAPOR=$(FILE).vapor
 FOLDER=phase2-tests

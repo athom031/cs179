@@ -114,7 +114,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
     String mapToRegister(String name) {
       for(int i = 0; i < vars.length; i++) {
         if(name.equals(vars[i])) {
-          return "$s"+i;
+          return "$t"+i;
         }
       }
       return name;
@@ -291,7 +291,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
       VOperand value = r.value;
       if(value != null) {
         String v = (value instanceof VLitInt)? value.toString() : mapToRegister(value.toString());
-        System.out.printf("  $v0 = %s\n", value);
+        System.out.printf("  $v0 = %s\n", v);
       }
       System.out.printf("  ret\n\n");
     }
