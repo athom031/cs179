@@ -11,23 +11,22 @@ class V2VM extends CommandLineLauncher.TextOutput {
 
   public static void main(String[] args) {
     //CommandLineLauncher.run(new V2VM(), args);
+    boolean [][] matrix = new boolean[8][8];
 
-    boolean [][] matrix = new boolean[6][6];
+
     V2VM.edge(matrix, 0, 1);
-    V2VM.edge(matrix, 1, 2);
-    V2VM.edge(matrix, 0, 2);
-    V2VM.edge(matrix, 2, 5);
-    V2VM.edge(matrix, 3, 4);
-    V2VM.edge(matrix, 3, 4);
+    V2VM.edge(matrix, 2, 3);
     V2VM.edge(matrix, 4, 5);
-    V2VM.edge(matrix, 3, 5);
+    V2VM.edge(matrix, 6, 7);
 
-    int [] colors = V2VM.graphColor(matrix, 3);
+
+    int [] colors = V2VM.graphColor(matrix, 5);
     for(int i = 0; i < colors.length; i++) {
       System.err.println(colors[i]);
     }
   }
 
+  // TODO: check for bugs!!!
   public static int [] graphColor(boolean [][] matrix, int maxColor) {
     assert(matrix != null && matrix.length == matrix[0].length);
     int size = matrix.length;
@@ -102,6 +101,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
     return count;
   }
 
+  @Override
   public void run(PrintWriter out, InputStream in, PrintWriter err, String [] args) throws Exit {
     try {
       VaporProgram p = V2VM.parseVapor(in, System.err);
