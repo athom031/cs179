@@ -18,6 +18,17 @@ class V2VM extends CommandLineLauncher.TextOutput {
     try {
       VaporProgram p = V2VM.parseVapor(in, System.err);
       InstructionVisitor visitor = new InstructionVisitor();
+
+      // data segment
+      for(VDataSegment dataSegment : p.dataSegments) {
+        System.out.printf("const %s\n", dataSegment.ident);
+        for(VOperand.Static value : dataSegment.values) {
+          System.out.printf("  %s\n", value.toString());
+        }
+        System.out.println();
+      }
+
+      // code generation
       for(VFunction function : p.functions) {
         String funcName = function.ident;
         int inVar = function.params.length < 3? function.params.length : 3;
@@ -61,7 +72,6 @@ class V2VM extends CommandLineLauncher.TextOutput {
         }
       }
     } catch(Exception e) {
-      //System.err.println(e);
       e.printStackTrace();
     }
   }
@@ -202,14 +212,16 @@ class V2VM extends CommandLineLauncher.TextOutput {
       VAddr<VFunction> addr = c.addr;
       VOperand [] args = c.args;
       VVarRef.Local dest = c.dest;
-      int min = args.length < 3? args.length : 3;
+      int min = args.length < 4? args.length : 4;
 
       for(int i = 0; i < min; i++) {
-        System.out.printf("  $a%d = %s\n", i, args[i]);
+        String a = mapToRegister(args[i].toString());
+        System.out.printf("  $a%d = %s\n", i, a);
       }
 
-      for(int i = 3; i < args.length; i++) {
-        System.out.printf("  out[%d] = %s\n", i-3, args[i]);
+      for(int i = 4; i < args.length; i++) {
+        String a = mapToRegister(args[i].toString());
+        System.out.printf("  out[%d] = %s\n", i-4, a);
       }
 
       System.out.printf("  call %s\n", addr);
@@ -247,7 +259,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         String v = (value instanceof VLitInt)? value.toString() : mapToRegister(value.toString());
         System.out.printf("  $v0 = %s\n", value);
       }
-      System.out.printf("  ret\n");
+      System.out.printf("  ret\n\n");
     }
   }
 
