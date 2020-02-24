@@ -9,6 +9,10 @@ import java.io.*;
 
 class V2VM extends CommandLineLauncher.TextOutput {
 
+  // TODO: Registor allocation graph coloring algorithm is working consistently
+  // Code generation works for trivial cases like 1-Basic and 2-Loop
+  // However, it cannot handle more complicated cases.
+
   public static void main(String[] args) {
     CommandLineLauncher.run(new V2VM(), args);
   }
@@ -79,7 +83,13 @@ class V2VM extends CommandLineLauncher.TextOutput {
   public static VaporProgram parseVapor(InputStream in, PrintStream err) throws IOException {
     Op [] ops = {Op.Add, Op.Sub, Op.MulS, Op.Eq, Op.Lt, Op.LtS, Op.PrintIntS, Op.HeapAllocZ, Op.Error};
     boolean allowLocals = true;
-    String [] registers = null;
+    String [] registers = {
+      "$a0", "$a1", "$a2", "$a3",
+      "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7",
+      "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8",
+      "$v0"
+    };
+//null;
     boolean allowStack = false;
     try {
       return VaporParser.run(new InputStreamReader(in), 
@@ -107,7 +117,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
           return "$s"+i;
         }
       }
-      return null;
+      return name;
     }
 
     @Override
@@ -190,7 +200,8 @@ class V2VM extends CommandLineLauncher.TextOutput {
 
       case "HeapAllocZ": {
         String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
-        System.out.printf("  %s = %s(%s)\n", dest, op.name, a0);
+        String d = mapToRegister(dest.toString());
+        System.out.printf("  %s = %s(%s)\n", d, op.name, a0);
         break;
       }
 
@@ -224,8 +235,12 @@ class V2VM extends CommandLineLauncher.TextOutput {
         System.out.printf("  out[%d] = %s\n", i-4, a);
       }
 
-      System.out.printf("  call %s\n", addr);
-      System.out.printf("  %s = $v0\n", dest);
+      String a = mapToRegister(addr.toString());
+
+
+      String d = mapToRegister(dest.toString());
+      System.out.printf("  call %s\n", a);
+      System.out.printf("  %s = $v0\n", d);
     }
 
     @Override
@@ -239,17 +254,36 @@ class V2VM extends CommandLineLauncher.TextOutput {
       VVarRef dest = r.dest;
       VMemRef src = r.source;
       String d = mapToRegister(dest.toString());
-      String s = mapToRegister(src.toString());
-      System.out.printf("  [%s] = %s\n", d, s);
+      int offset = 0;
+      String s;
+      if(src instanceof VMemRef.Global) {
+        VMemRef.Global gg = (VMemRef.Global) src;
+        s = mapToRegister(gg.base.toString());
+        offset = gg.byteOffset;
+      } else {
+        s = "";
+      }
+
+      System.out.printf("  %s = [%s%s]\n", d, s, offset>0?"+"+offset:"");
     }
 
     @Override
     public void visit(VMemWrite w) throws Exception {
       VMemRef dest = w.dest;
       VOperand src = w.source;
-      String d = mapToRegister(dest.toString());
+      String d; 
+      int offset = 0;;
       String s = mapToRegister(src.toString());
-      System.out.printf("  %s = [%s]\n", d, s);
+
+      if(dest instanceof VMemRef.Global) {
+        VMemRef.Global gg = (VMemRef.Global) dest;
+        d = mapToRegister(gg.base.toString());
+        offset = gg.byteOffset;
+      } else {
+        d = "";
+      }
+
+      System.out.printf("  [%s%s] = %s\n", d, offset>0?"+"+offset:"", s);
     }
 
     @Override
