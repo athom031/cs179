@@ -10,23 +10,256 @@ import java.io.*;
 class V2VM extends CommandLineLauncher.TextOutput {
 
   public static void main(String[] args) {
-    //CommandLineLauncher.run(new V2VM(), args);
-    boolean [][] matrix = new boolean[8][8];
+    CommandLineLauncher.run(new V2VM(), args);
+  }
 
+  @Override
+  public void run(PrintWriter out, InputStream in, PrintWriter err, String [] args) throws Exit {
+    try {
+      VaporProgram p = V2VM.parseVapor(in, System.err);
+      InstructionVisitor visitor = new InstructionVisitor();
+      for(VFunction function : p.functions) {
+        String funcName = function.ident;
+        int inVar = function.params.length < 3? function.params.length : 3;
+        int outVar = function.params.length < 3? 0 : function.params.length-3;
+        int localVar = 8;
+        visitor.vars = function.vars;
+        visitor.params = function.params;
+        System.out.printf("func %s [in %d, out %d, local %d]\n", funcName, inVar, outVar, localVar);
 
-    V2VM.edge(matrix, 0, 1);
-    V2VM.edge(matrix, 2, 3);
-    V2VM.edge(matrix, 4, 5);
-    V2VM.edge(matrix, 6, 7);
+        int labelIndex = 0;
+        int instrIndex = 0;
+        int i = 0;
 
+        VCodeLabel label = function.labels[labelIndex]; 
+        VInstr instr = function.body[instrIndex];
 
-    int [] colors = V2VM.graphColor(matrix, 5);
-    for(int i = 0; i < colors.length; i++) {
-      System.err.println(colors[i]);
+        while(true) {
+          if(label.sourcePos.line == i) {
+            System.out.printf("  %s:\n", label.ident);
+            System.err.println("LABEL  : "+i);
+            labelIndex++;
+            if(labelIndex < function.labels.length) {
+              label = function.labels[labelIndex];
+            }
+          }
+
+          if(instr.sourcePos.line == i) {
+            instr.accept(visitor);
+            System.err.println("INSTR  : "+i);
+            if(instr instanceof VReturn) 
+              break;
+            instrIndex++;
+            if(instrIndex < function.body.length) {
+              instr = function.body[instrIndex];
+            }
+          }
+
+          i++;
+        }
+      }
+    } catch(Exception e) {
+      System.err.println(e);
     }
   }
 
-  // TODO: check for bugs!!!
+  public static VaporProgram parseVapor(InputStream in, PrintStream err) throws IOException {
+    Op [] ops = {Op.Add, Op.Sub, Op.MulS, Op.Eq, Op.Lt, Op.LtS, Op.PrintIntS, Op.HeapAllocZ, Op.Error};
+    boolean allowLocals = true;
+    String [] registers = null;
+    boolean allowStack = false;
+    try {
+      return VaporParser.run(new InputStreamReader(in), 
+                             1, 
+                             1,
+                             java.util.Arrays.asList(ops), 
+                             allowLocals, 
+                             registers, 
+                             allowStack);
+
+    } catch(ProblemException ex) {
+      err.println(ex.getMessage());
+      return null;
+    }
+  }
+
+  class InstructionVisitor extends VInstr.Visitor<Exception> {
+
+    public String [] vars = null;
+    public VVarRef.Local [] params = null;
+
+    String mapToRegister(String name) {
+      for(int i = 0; i < vars.length; i++) {
+        if(name.equals(vars[i])) {
+          return "$s"+i;
+        }
+      }
+      return null;
+    }
+
+    @Override
+    public void visit(VAssign a) throws Exception {
+      VVarRef dest = a.dest;
+      VOperand src = a.source;
+      String d = mapToRegister(dest.toString());
+      String s = (src instanceof VLitInt)? src.toString() : mapToRegister(src.toString());
+      System.out.printf("  %s = %s\n", d, s);
+    }
+
+    @Override
+    public void visit(VBranch b) throws Exception {
+      boolean positive = b.positive;
+      VLabelRef<VCodeLabel> target = b.target;
+      VOperand value = b.value;
+      String v = mapToRegister(value.toString());
+      System.out.printf("  if%s %s goto %s\n", positive? "" : 0, v, target);
+    }
+
+    @Override
+    public void visit(VBuiltIn b) throws Exception {
+      VOperand [] args = b.args;
+      VVarRef dest = b.dest;
+      VBuiltIn.Op op = b.op;
+      switch(op.name) {
+      case "Add": {
+        String d = mapToRegister(dest.toString());
+        String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
+        String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
+        System.out.printf("  %s = %s(%s %s)\n", d, op.name, a0, a1);
+        break;
+      }
+
+      case "Sub": {
+
+        String d = mapToRegister(dest.toString());
+        String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
+        String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
+
+        System.out.printf("  %s = %s(%s %s)\n", d, op.name, a0, a1);
+        break;
+      }
+
+      case "MulS": {
+
+        String d = mapToRegister(dest.toString());
+        String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
+        String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
+
+        System.out.printf("  %s = %s(%s %s)\n", d, op.name, a0, a1);
+        break;
+      }
+
+      case "Eq": {
+
+
+        String d = mapToRegister(dest.toString());
+        String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
+        String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
+
+        System.out.printf("  %s = %s(%s %s)\n", d, op.name, a0, a1);
+        break;
+      }
+
+      case "Lt": {
+
+        String d = mapToRegister(dest.toString());
+        String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
+        String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
+
+
+
+        System.out.printf("  %s = %s(%s %s)\n", d, op.name, a0, a1);
+        break;
+      }
+
+      case "LtS": {
+
+        String d = mapToRegister(dest.toString());
+        String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
+        String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
+
+
+
+        System.out.printf("  %s = %s(%s %s)\n", d, op.name, a0, a1);
+        break;
+      }
+
+      case "PrintIntS": {
+        String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
+        System.out.printf("  %s(%s)\n", op.name, a0);
+        break;
+      }
+
+      case "HeapAllocZ": {
+
+        String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
+
+        System.out.printf("  %s = %s(%s)\n", dest, op.name, a0);
+        break;
+      }
+
+      case "Error": {
+        System.out.printf("  %s(\"%s\")\n", op.name, args[0]);
+        break;
+      }
+
+      default: {
+        assert(false); // Should not happen
+        break;
+      }
+
+      }
+    }
+
+    @Override
+    public void visit(VCall c) throws Exception {
+      VAddr<VFunction> addr = c.addr;
+      VOperand [] args = c.args;
+      VVarRef.Local dest = c.dest;
+      int min = args.length < 3? args.length : 3;
+
+      for(int i = 0; i < min; i++) {
+        System.out.printf("  $a%d = [%s]\n", i, args[i]);
+      }
+
+      for(int i = 3; i < args.length; i++) {
+        System.out.printf("  out[%d] = [%d]\n", i-3, args[i]);
+      }
+
+      System.out.printf("  call %s\n", addr);
+      System.out.printf("  %s = $v0\n", dest);
+    }
+
+    @Override
+    public void visit(VGoto g) throws Exception {
+      VAddr<VCodeLabel> target = g.target;
+      System.out.printf("  goto %s\n", target);
+    }
+
+    @Override
+    public void visit(VMemRead r) throws Exception {
+      VVarRef dest = r.dest;
+      VMemRef src = r.source;
+      System.out.printf(" [%s] = %s\n", dest, src);
+    }
+
+    @Override
+    public void visit(VMemWrite w) throws Exception {
+      VMemRef dest = w.dest;
+      VOperand src = w.source;
+      System.out.printf("  %s = [%s]\n", dest, src);
+    }
+
+    @Override
+    public void visit(VReturn r) throws Exception {
+      VOperand value = r.value;
+      if(value != null) {
+        System.out.printf("  $v0 = %s\n", value);
+      }
+      System.out.printf("  ret\n");
+    }
+  }
+
   public static int [] graphColor(boolean [][] matrix, int maxColor) {
     assert(matrix != null && matrix.length == matrix[0].length);
     int size = matrix.length;
@@ -101,157 +334,8 @@ class V2VM extends CommandLineLauncher.TextOutput {
     return count;
   }
 
-  @Override
-  public void run(PrintWriter out, InputStream in, PrintWriter err, String [] args) throws Exit {
-    try {
-      VaporProgram p = V2VM.parseVapor(in, System.err);
-      InstructionVisitor visitor = new InstructionVisitor();
-      for(VFunction function : p.functions) {
-        System.err.println(function.ident);
-        for(String v : function.vars) {
-          System.err.println("  vars: "+ v);
-        }
 
-        for(VInstr instr : function.body) {
-          instr.accept(visitor);
-        }
-      }
-    } catch(Exception e) {
-      System.err.println(e);
-    }
-  }
 
-  public static VaporProgram parseVapor(InputStream in, PrintStream err) throws IOException {
-    Op [] ops = {Op.Add, Op.Sub, Op.MulS, Op.Eq, Op.Lt, Op.LtS, Op.PrintIntS, Op.HeapAllocZ, Op.Error};
-    boolean allowLocals = true;
-    String [] registers = null;
-    boolean allowStack = false;
-    try {
-      return VaporParser.run(new InputStreamReader(in), 
-                             1, 
-                             1,
-                             java.util.Arrays.asList(ops), 
-                             allowLocals, 
-                             registers, 
-                             allowStack);
-
-    } catch(ProblemException ex) {
-      err.println(ex.getMessage());
-      return null;
-    }
-  }
-
-  // TODO: I don't know if Exception is the correct exception to use
-  class InstructionVisitor extends VInstr.Visitor<Exception> {
-
-    @Override
-    public void visit(VAssign a) throws Exception {
-      VVarRef dest = a.dest;
-      VOperand src = a.source;
-      System.err.printf("  MOV %s, %s\n", dest, src);
-    }
-
-    @Override
-    public void visit(VBranch b) throws Exception {
-      boolean positive = b.positive;
-      VLabelRef<VCodeLabel> target = b.target;
-      VOperand value = b.value;
-      System.err.printf("  BRCH %s [%s] %s\n", positive, target, value);
-    }
-
-    @Override
-    public void visit(VBuiltIn b) throws Exception {
-      VOperand [] args = b.args;
-      VVarRef dest = b.dest;
-      VBuiltIn.Op op = b.op;
-      switch(op.name) {
-      case "Add": {
-        System.err.printf("  %s %s, %s, %s\n", op.name, dest, args[0], args[1]);
-        break;
-      }
-
-      case "Sub": {
-        System.err.printf("  %s %s, %s, %s\n", op.name, dest, args[0], args[1]);
-        break;
-      }
-
-      case "MulS": {
-        System.err.printf("  %s %s, %s, %s\n", op.name, dest, args[0], args[1]);
-        break;
-      }
-
-      case "Eq": {
-        System.err.printf("  %s=%s %s, %s\n", dest, op.name, args[0], args[1]);
-        break;
-      }
-
-      case "Lt": {
-        System.err.printf("  %s=%s %s, %s\n", dest, op.name, args[0], args[1]);
-        break;
-      }
-
-      case "LtS": {
-        System.err.printf("  %s=%s %s, %s\n", dest, op.name, args[0], args[1]);
-        break;
-      }
-
-      case "PrintIntS": {
-        System.err.printf("  %s(%s)\n", op.name, args[0]);
-        break;
-      }
-
-      case "HeapAllocZ": {
-        System.err.printf("  %s=%s(%s)\n", dest, op.name, args[0]);
-        break;
-      }
-
-      case "Error": {
-        System.err.printf("  %s(\"%s\")\n", op.name, args[0]);
-        break;
-      }
-
-      default: {
-        System.err.println("WTF "+ op.name);
-        break;
-      }
-
-      }
-    }
-
-    @Override
-    public void visit(VCall c) throws Exception {
-      VAddr<VFunction> addr = c.addr;
-      VOperand [] args = c.args;
-      VVarRef.Local dest = c.dest;
-      System.err.printf("  %s = Call %s(%s)\n", dest, addr, args);
-    }
-
-    @Override
-    public void visit(VGoto g) throws Exception {
-      VAddr<VCodeLabel> target = g.target;
-      System.err.printf("  Goto: %s\n", target);
-    }
-
-    @Override
-    public void visit(VMemRead r) throws Exception {
-      VVarRef dest = r.dest;
-      VMemRef src = r.source;
-      System.err.printf(" MEM_READ %s, %s\n", dest, src);
-    }
-
-    @Override
-    public void visit(VMemWrite w) throws Exception {
-      VMemRef dest = w.dest;
-      VOperand src = w.source;
-      System.err.printf("  MEM_WRITE %s, %s\n", dest, src);
-    }
-
-    @Override
-    public void visit(VReturn r) throws Exception {
-      VOperand value = r.value;
-      System.err.printf("  RET %s\n", value==null? "" : value);
-    }
-  }
 
 }
 

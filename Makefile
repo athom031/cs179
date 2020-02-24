@@ -1,4 +1,4 @@
-FILE=1-Basic
+FILE=2-Loop
 JAVA=$(FILE).java
 VAPOR=$(FILE).vapor
 FOLDER=phase2-tests
@@ -8,7 +8,8 @@ OUTPUT_FOLDER=out
 vaporm:
 	javac V2VM.java
 	java V2VM < Phase3Tests/$(FILE).vapor > $(FILE).vaporm
-#	java -jar vapor.jar run -mips $(FILE).vaporm
+	cat $(FILE).vaporm
+	java -jar vapor.jar run -mips $(FILE).vaporm
 
 run:
 	javac J2V.java
