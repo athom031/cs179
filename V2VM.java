@@ -35,23 +35,21 @@ class V2VM extends CommandLineLauncher.TextOutput {
       // code generation
       for(VFunction function : p.functions) {
         String funcName = function.ident;
-        int inVar = function.params.length < 3? function.params.length : 3;
+        int inVar = function.params.length < 4? 0 : function.params.length-4;
         int outVar = 10;//function.params.length < 3? 0 : function.params.length-3;
         int localVar = 8;
         visitor.vars = function.vars;
         visitor.params = function.params;
         System.out.printf("func %s [in %d, out %d, local %d]\n", funcName, inVar, outVar, localVar);
-
+        if(!funcName.equals("Main")) {
+          visitor.functionStuff();
+        }
         int labelIndex = 0;
         int instrIndex = 0;
         int i = 0;
 
         VCodeLabel label = function.labels==null || function.labels.length==0? null : function.labels[labelIndex]; 
         VInstr instr = function.body==null || function.body.length==0? null : function.body[instrIndex];
-
-        /*for(VVarRef.Local param: function.params) {
-          System.out.printf("  $
-        }*/
 
         while(true) {
           // print out the label
@@ -123,6 +121,21 @@ class V2VM extends CommandLineLauncher.TextOutput {
       }
       return name;
     }
+
+    public void functionStuff() {
+      int min = params.length < 4? params.length : 4;
+  
+      for(int i = 0; i < min; i++) {
+        String a = mapToRegister(params[i].toString());
+        System.out.printf("  %s = $a%d\n", a, i);
+      }
+    
+      for(int i = 4; i < params.length; i++) {
+        String a = mapToRegister(params[i].toString());
+        System.out.printf("  %s = in[%d]\n", a, i-4);
+      }
+    }
+
 
     @Override
     public void visit(VAssign a) throws Exception {
