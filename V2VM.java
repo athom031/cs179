@@ -42,7 +42,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         visitor.params = function.params;
         System.out.printf("func %s [in %d, out %d, local %d]\n", funcName, inVar, outVar, localVar);
         if(!funcName.equals("Main")) {
-          visitor.functionStuff();
+          visitor.handleParams();
         }
         int labelIndex = 0;
         int instrIndex = 0;
@@ -122,7 +122,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
       return name;
     }
 
-    public void functionStuff() {
+    public void handleParams() {
       int min = params.length < 4? params.length : 4;
   
       for(int i = 0; i < min; i++) {
