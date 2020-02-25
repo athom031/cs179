@@ -49,6 +49,10 @@ class V2VM extends CommandLineLauncher.TextOutput {
         VCodeLabel label = function.labels==null || function.labels.length==0? null : function.labels[labelIndex]; 
         VInstr instr = function.body==null || function.body.length==0? null : function.body[instrIndex];
 
+        /*for(VVarRef.Local param: function.params) {
+          System.out.printf("  $
+        }*/
+
         while(true) {
           // print out the label
           if(label != null && label.sourcePos.line == i) {
