@@ -157,7 +157,6 @@ class V2VM extends CommandLineLauncher.TextOutput {
       for(int i=0; i<vars.length; i++) {
         if(v.equals(vars[i])) return i;
       }
-      assert(false);
       return -1;
     }
 
@@ -356,18 +355,26 @@ class V2VM extends CommandLineLauncher.TextOutput {
       VVarRef.Local dest = c.dest;
       int min = args.length < 4? args.length : 4;
 
-      for(int i = 0; i < min; i++) {
+      /*for(int i = 0; i < min; i++) {
         //String a = mapToRegister(args[i].toString());
       }
 
       for(int i = 4; i < args.length; i++) {
         //String a = mapToRegister(args[i].toString());
-      }
+      }*/
 
       //String a = mapToRegister(addr.toString());
-
-
       //String d = mapToRegister(dest.toString());
+
+      int line = c.sourcePos.line;
+      for(VOperand a : args) {
+        int idx = getID(a.toString());
+        if(idx != -1) {
+          livenessArray[idx][line] = true;
+        } else {
+
+        }
+      }
     }
 
     @Override
@@ -384,11 +391,14 @@ class V2VM extends CommandLineLauncher.TextOutput {
       String s;
       if(src instanceof VMemRef.Global) {
         VMemRef.Global gg = (VMemRef.Global) src;
-        //s = mapToRegister(gg.base.toString());
+        s = gg.base.toString();
         offset = gg.byteOffset;
       } else {
         s = "";
       }
+      int idx = getID(s);
+      int line = r.sourcePos.line;
+      livenessArray[idx][line] = true;
 
     }
 
@@ -396,18 +406,13 @@ class V2VM extends CommandLineLauncher.TextOutput {
     public void visit(VMemWrite w) throws Exception {
       VMemRef dest = w.dest;
       VOperand src = w.source;
-      String d; 
-      int offset = 0;;
-      //String s = mapToRegister(src.toString());
-
-      if(dest instanceof VMemRef.Global) {
-        VMemRef.Global gg = (VMemRef.Global) dest;
-        //d = mapToRegister(gg.base.toString());
-        offset = gg.byteOffset;
+      if(src instanceof VLitInt) {
+        return;
       } else {
-        d = "";
+        int idx = getID(src.toString());
+        int line = w.sourcePos.line;
+        livenessArray[idx][line] = true;
       }
-
     }
 
     @Override
@@ -415,6 +420,11 @@ class V2VM extends CommandLineLauncher.TextOutput {
       VOperand value = r.value;
       if(value != null) {
         //String v = (value instanceof VLitInt)? value.toString() : mapToRegister(value.toString());
+        int idx = getID(value.toString());
+        int line = r.sourcePos.line;
+
+        if(idx == -1) return;
+        livenessArray[idx][line] = true;
       }
     }
 
