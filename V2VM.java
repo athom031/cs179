@@ -9,9 +9,12 @@ import java.io.*;
 
 class V2VM extends CommandLineLauncher.TextOutput {
 
-  // [                         ] numInstrs
-  // [                         ]
-  // [                         ]
+  // a [t                        ] numInstrs
+  // b [                         ]
+  // c [                         ]
+  //
+  //
+  //
 
   // TODO: Registor allocation graph coloring algorithm is working consistently
   // Code generation works for trivial cases like 1-Basic and 2-Loop
@@ -26,15 +29,16 @@ class V2VM extends CommandLineLauncher.TextOutput {
     try {
       VaporProgram p = V2VM.parseVapor(in, System.err);
       InstructionVisitor visitor = new InstructionVisitor();
+      LivenessVisitor lvisitor = new LivenessVisitor();
 
       // data segment
-      for(VDataSegment dataSegment : p.dataSegments) {
+      /*for(VDataSegment dataSegment : p.dataSegments) {
         System.out.printf("const %s\n", dataSegment.ident);
         for(VOperand.Static value : dataSegment.values) {
           System.out.printf("  %s\n", value.toString());
         }
         System.out.println();
-      }
+      }*/
 
       // code generation
       for(VFunction function : p.functions) {
@@ -42,12 +46,37 @@ class V2VM extends CommandLineLauncher.TextOutput {
         int inVar = function.params.length < 4? 0 : function.params.length-4;
         int outVar = 10;//function.params.length < 3? 0 : function.params.length-3;
         int localVar = 8;
+        lvisitor.vars = function.vars;
+        lvisitor.params = function.params;
+      
+        // TODO: THis is clearly a waste of memory...
+        lvisitor.livenessArray = new boolean [function.vars.length] [2*function.body.length];
+
+
+
         visitor.vars = function.vars;
         visitor.params = function.params;
-        System.out.printf("func %s [in %d, out %d, local %d]\n", funcName, inVar, outVar, localVar);
-        if(!funcName.equals("Main")) {
-          visitor.handleParams();
+        //System.out.printf("func %s [in %d, out %d, local %d]\n", funcName, inVar, outVar, localVar);
+        //if(!funcName.equals("Main")) {
+        //  visitor.handleParams();
+        //}
+
+
+        for(VInstr instr : function.body) {
+
+          instr.accept(lvisitor);
+
         }
+
+        for(int i=0; i<lvisitor.livenessArray.length; i++) {
+          System.out.print(lvisitor.vars[i]+": ");
+          int length = function.body.length*2;
+          for(int j=0; j<length; j++) {
+            System.out.print(lvisitor.livenessArray[i][j]? "t " : "f ");
+          }
+          System.out.println();
+        }
+
         int labelIndex = 0;
         int instrIndex = 0;
         int i = 0;
@@ -55,6 +84,11 @@ class V2VM extends CommandLineLauncher.TextOutput {
         VCodeLabel label = function.labels==null || function.labels.length==0? null : function.labels[labelIndex]; 
         VInstr instr = function.body==null || function.body.length==0? null : function.body[instrIndex];
 
+
+
+
+
+        /*
         while(true) {
           // print out the label
           if(label != null && label.sourcePos.line == i) {
@@ -79,7 +113,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
           }
 
           i++;
-        }
+        }*/
       }
     } catch(Exception e) {
       e.printStackTrace();
@@ -110,6 +144,280 @@ class V2VM extends CommandLineLauncher.TextOutput {
       err.println(ex.getMessage());
       return null;
     }
+  }
+
+  class LivenessVisitor extends VInstr.Visitor<Exception> {
+
+    public String [] vars = null;
+    public VVarRef.Local [] params = null;
+    public boolean [][] livenessArray = null;
+
+    int getID(String v) {
+      System.out.println(v);
+      for(int i=0; i<vars.length; i++) {
+        if(v.equals(vars[i])) return i;
+      }
+      assert(false);
+      return -1;
+    }
+
+    @Override
+    public void visit(VAssign a) throws Exception {
+      VVarRef dest = a.dest;
+      VOperand src = a.source;
+
+      if(src instanceof VLitInt) {
+        return;
+      } else {
+        int idx = getID(src.toString());
+        int line = a.sourcePos.line;
+        livenessArray[idx][line] = true;
+      }
+    }
+
+    @Override
+    public void visit(VBranch b) throws Exception {
+      boolean positive = b.positive;
+      VLabelRef<VCodeLabel> target = b.target;
+      VOperand value = b.value;
+    }
+
+    @Override
+    public void visit(VBuiltIn b) throws Exception {
+      VOperand [] args = b.args;
+      VVarRef dest = b.dest;
+      VBuiltIn.Op op = b.op;
+      switch(op.name) {
+      case "Add": {
+        //String d = mapToRegister(dest.toString());
+        //String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
+        if(!(args[0] instanceof VLitInt)) {
+          int idx = getID(args[0].toString());
+          int line = b.sourcePos.line;
+          livenessArray[idx][line] = true;
+        }
+
+        if(!(args[1] instanceof VLitInt)) {
+          int idx = getID(args[1].toString());
+          int line = b.sourcePos.line;
+          livenessArray[idx][line] = true;
+        }
+
+        //String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
+        break;
+      }
+
+      case "Sub": {
+
+        if(!(args[0] instanceof VLitInt)) {
+          int idx = getID(args[0].toString());
+          int line = b.sourcePos.line;
+          livenessArray[idx][line] = true;
+        }
+
+        if(!(args[1] instanceof VLitInt)) {
+          int idx = getID(args[1].toString());
+          int line = b.sourcePos.line;
+          livenessArray[idx][line] = true;
+        }
+
+
+        //String d = mapToRegister(dest.toString());
+        //String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
+        //String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
+        break;
+      }
+
+      case "MulS": {
+
+        if(!(args[0] instanceof VLitInt)) {
+          int idx = getID(args[0].toString());
+          int line = b.sourcePos.line;
+          livenessArray[idx][line] = true;
+        }
+
+        if(!(args[1] instanceof VLitInt)) {
+          int idx = getID(args[1].toString());
+          int line = b.sourcePos.line;
+          livenessArray[idx][line] = true;
+        }
+
+
+
+        //String d = mapToRegister(dest.toString());
+        //String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
+        //String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
+        break;
+      }
+
+      case "Eq": {
+
+        if(!(args[0] instanceof VLitInt)) {
+          int idx = getID(args[0].toString());
+          int line = b.sourcePos.line;
+          livenessArray[idx][line] = true;
+        }
+
+        if(!(args[1] instanceof VLitInt)) {
+          int idx = getID(args[1].toString());
+          int line = b.sourcePos.line;
+          livenessArray[idx][line] = true;
+        }
+
+
+        //String d = mapToRegister(dest.toString());
+        //String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
+        //String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
+        break;
+      }
+
+      case "Lt": {
+
+        if(!(args[0] instanceof VLitInt)) {
+          int idx = getID(args[0].toString());
+          int line = b.sourcePos.line;
+          livenessArray[idx][line] = true;
+        }
+
+        if(!(args[1] instanceof VLitInt)) {
+          int idx = getID(args[1].toString());
+          int line = b.sourcePos.line;
+          livenessArray[idx][line] = true;
+        }
+
+
+
+        //String d = mapToRegister(dest.toString());
+        //String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
+        //String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
+        break;
+      }
+
+      case "LtS": {
+
+        if(!(args[0] instanceof VLitInt)) {
+          int idx = getID(args[0].toString());
+          int line = b.sourcePos.line;
+          livenessArray[idx][line] = true;
+        }
+
+        if(!(args[1] instanceof VLitInt)) {
+          int idx = getID(args[1].toString());
+          int line = b.sourcePos.line;
+          livenessArray[idx][line] = true;
+        }
+
+
+
+        //String d = mapToRegister(dest.toString());
+        //String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
+        //String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
+        break;
+      }
+
+      case "PrintIntS": {
+        //String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
+        if(!(args[0] instanceof VLitInt)) {
+          int idx = getID(args[0].toString());
+          int line = b.sourcePos.line;
+          livenessArray[idx][line] = true;
+        }
+
+        break;
+      }
+
+      case "HeapAllocZ": {
+        //String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
+        //String d = mapToRegister(dest.toString());
+        if(!(args[0] instanceof VLitInt)) {
+          int idx = getID(args[0].toString());
+          int line = b.sourcePos.line;
+          livenessArray[idx][line] = true;
+        }
+        break;
+      }
+
+      case "Error": {
+        break;
+      }
+
+      default: {
+        assert(false); // Should not happen
+        break;
+      }
+
+      }
+    }
+
+    @Override
+    public void visit(VCall c) throws Exception {
+      VAddr<VFunction> addr = c.addr;
+      VOperand [] args = c.args;
+      VVarRef.Local dest = c.dest;
+      int min = args.length < 4? args.length : 4;
+
+      for(int i = 0; i < min; i++) {
+        //String a = mapToRegister(args[i].toString());
+      }
+
+      for(int i = 4; i < args.length; i++) {
+        //String a = mapToRegister(args[i].toString());
+      }
+
+      //String a = mapToRegister(addr.toString());
+
+
+      //String d = mapToRegister(dest.toString());
+    }
+
+    @Override
+    public void visit(VGoto g) throws Exception {
+      VAddr<VCodeLabel> target = g.target;
+    }
+
+    @Override
+    public void visit(VMemRead r) throws Exception {
+      VVarRef dest = r.dest;
+      VMemRef src = r.source;
+      //String d = mapToRegister(dest.toString());
+      int offset = 0;
+      String s;
+      if(src instanceof VMemRef.Global) {
+        VMemRef.Global gg = (VMemRef.Global) src;
+        //s = mapToRegister(gg.base.toString());
+        offset = gg.byteOffset;
+      } else {
+        s = "";
+      }
+
+    }
+
+    @Override
+    public void visit(VMemWrite w) throws Exception {
+      VMemRef dest = w.dest;
+      VOperand src = w.source;
+      String d; 
+      int offset = 0;;
+      //String s = mapToRegister(src.toString());
+
+      if(dest instanceof VMemRef.Global) {
+        VMemRef.Global gg = (VMemRef.Global) dest;
+        //d = mapToRegister(gg.base.toString());
+        offset = gg.byteOffset;
+      } else {
+        d = "";
+      }
+
+    }
+
+    @Override
+    public void visit(VReturn r) throws Exception {
+      VOperand value = r.value;
+      if(value != null) {
+        //String v = (value instanceof VLitInt)? value.toString() : mapToRegister(value.toString());
+      }
+    }
+
   }
 
   class InstructionVisitor extends VInstr.Visitor<Exception> {
