@@ -9,6 +9,10 @@ import java.io.*;
 
 class V2VM extends CommandLineLauncher.TextOutput {
 
+  // [                         ] numInstrs
+  // [                         ]
+  // [                         ]
+
   // TODO: Registor allocation graph coloring algorithm is working consistently
   // Code generation works for trivial cases like 1-Basic and 2-Loop
   // However, it cannot handle more complicated cases.
