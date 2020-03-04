@@ -91,7 +91,6 @@ class V2VM extends CommandLineLauncher.TextOutput {
       "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8",
       "$v0"
     };
-//null;
     boolean allowStack = false;
     try {
       return VaporParser.run(new InputStreamReader(in), 
