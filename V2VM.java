@@ -32,13 +32,13 @@ class V2VM extends CommandLineLauncher.TextOutput {
       LivenessVisitor lvisitor = new LivenessVisitor();
 
       // data segment
-      /*for(VDataSegment dataSegment : p.dataSegments) {
+      for(VDataSegment dataSegment : p.dataSegments) {
         System.out.printf("const %s\n", dataSegment.ident);
         for(VOperand.Static value : dataSegment.values) {
           System.out.printf("  %s\n", value.toString());
         }
         System.out.println();
-      }*/
+      }
 
       // code generation
       for(VFunction function : p.functions) {
@@ -48,33 +48,35 @@ class V2VM extends CommandLineLauncher.TextOutput {
         int localVar = 8;
         lvisitor.vars = function.vars;
         lvisitor.params = function.params;
-      
-        // TODO: THis is clearly a waste of memory...
-        lvisitor.livenessArray = new boolean [function.vars.length] [2*function.body.length];
+        
+        // this is a bit silly.
+        // calculate the last line of code. then create an array of line+1.
+        int num = function.body[function.body.length-1].sourcePos.line+1;
+        lvisitor.livenessArray = new boolean [function.vars.length][num];// [2*function.body.length];
 
 
 
         visitor.vars = function.vars;
         visitor.params = function.params;
-        //System.out.printf("func %s [in %d, out %d, local %d]\n", funcName, inVar, outVar, localVar);
-        //if(!funcName.equals("Main")) {
-        //  visitor.handleParams();
-        //}
+        System.out.printf("func %s [in %d, out %d, local %d]\n", funcName, inVar, outVar, localVar);
+        if(!funcName.equals("Main")) {
+          visitor.handleParams();
+        }
 
 
-        for(VInstr instr : function.body) {
-
+        for(int i=function.body.length-1; i>=0;i--) {
+          VInstr instr = function.body[i];
           instr.accept(lvisitor);
 
         }
 
         for(int i=0; i<lvisitor.livenessArray.length; i++) {
-          System.out.print(lvisitor.vars[i]+": ");
-          int length = function.body.length*2;
+          System.err.printf("%7s: ", lvisitor.vars[i]);
+          int length = lvisitor.livenessArray[0].length;
           for(int j=0; j<length; j++) {
-            System.out.print(lvisitor.livenessArray[i][j]? "t " : "f ");
+            System.err.print(lvisitor.livenessArray[i][j]? "t " : "_ ");
           }
-          System.out.println();
+          System.err.println();
         }
 
         int labelIndex = 0;
@@ -84,11 +86,6 @@ class V2VM extends CommandLineLauncher.TextOutput {
         VCodeLabel label = function.labels==null || function.labels.length==0? null : function.labels[labelIndex]; 
         VInstr instr = function.body==null || function.body.length==0? null : function.body[instrIndex];
 
-
-
-
-
-        /*
         while(true) {
           // print out the label
           if(label != null && label.sourcePos.line == i) {
@@ -113,7 +110,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
           }
 
           i++;
-        }*/
+        }
       }
     } catch(Exception e) {
       e.printStackTrace();
@@ -152,9 +149,10 @@ class V2VM extends CommandLineLauncher.TextOutput {
     public boolean [][] livenessArray = null;
 
     int getID(String v) {
-      System.out.println(v);
       for(int i=0; i<vars.length; i++) {
+        // TODO: this is bad...
         if(v.equals(vars[i])) return i;
+        //if(v.equals(params[i])) return i;
       }
       return -1;
     }
@@ -164,13 +162,19 @@ class V2VM extends CommandLineLauncher.TextOutput {
       VVarRef dest = a.dest;
       VOperand src = a.source;
 
+      int idx = getID(dest.toString());
+      int line = a.sourcePos.line;
+
+      livenessArray[idx][line+1] = true;
+      System.err.printf("HOOLA %d %d\n", idx, line+1);
+
       if(src instanceof VLitInt) {
         return;
-      } else {
-        int idx = getID(src.toString());
-        int line = a.sourcePos.line;
-        livenessArray[idx][line] = true;
-      }
+      } 
+      
+      idx = getID(src.toString());
+      livenessArray[idx][line] = true;
+
     }
 
     @Override
@@ -178,6 +182,12 @@ class V2VM extends CommandLineLauncher.TextOutput {
       boolean positive = b.positive;
       VLabelRef<VCodeLabel> target = b.target;
       VOperand value = b.value;
+
+      int idx = getID(value.toString());
+      int line = b.sourcePos.line;
+
+      livenessArray[idx][line] = true;
+      System.err.printf("HOOLA %d %d\n", idx, line);
     }
 
     @Override
@@ -315,7 +325,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
 
       case "PrintIntS": {
         //String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
-        if(!(args[0] instanceof VLitInt)) {
+        if(args[0] instanceof VOperand) {
           int idx = getID(args[0].toString());
           int line = b.sourcePos.line;
           livenessArray[idx][line] = true;
@@ -370,9 +380,12 @@ class V2VM extends CommandLineLauncher.TextOutput {
         int idx = getID(a.toString());
         if(idx != -1) {
           livenessArray[idx][line] = true;
-        } else {
-
         }
+      }
+
+      int idx = getID(addr.toString());
+      if(idx != -1) {
+        livenessArray[idx][line] = true;
       }
     }
 
@@ -407,9 +420,12 @@ class V2VM extends CommandLineLauncher.TextOutput {
       VOperand src = w.source;
       if(src instanceof VLitInt) {
         return;
+      } else if(src instanceof VLabelRef) {
+        return;
       } else {
         int idx = getID(src.toString());
         int line = w.sourcePos.line;
+        System.out.println(src.toString() + " "+src.getClass().toString());
         livenessArray[idx][line] = true;
       }
     }
