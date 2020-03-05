@@ -1,0 +1,9 @@
+func Main()
+	x = 0
+	y = 5
+	PrintIntS(x)
+  x = Add(x 1)
+  y = Sub(y 1)
+	PrintIntS(x)
+	PrintIntS(y)
+	ret

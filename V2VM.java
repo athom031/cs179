@@ -163,10 +163,12 @@ class V2VM extends CommandLineLauncher.TextOutput {
       VOperand src = a.source;
 
       int idx = getID(dest.toString());
-      int line = a.sourcePos.line;
-
-      livenessArray[idx][line+1] = true;
-      System.err.printf("HOOLA %d %d\n", idx, line+1);
+      int line = a.sourcePos.line + 1;
+      // TODO: This sucks!
+      while(line < livenessArray[0].length && !livenessArray[idx][line]) {
+        livenessArray[idx][line] = true;
+        line++;
+      } 
 
       if(src instanceof VLitInt) {
         return;
@@ -725,7 +727,36 @@ class V2VM extends CommandLineLauncher.TextOutput {
     return count;
   }
 
+  public class BasicBlock {
 
+    public int start;
+    public int end;
+    public int [] entries;
+    public int [] exits;
+
+
+    public static BasicBlock [] generate(VInstr [] body, VCodeLabel [] labels) {
+      // count the number of basic blocks...
+      int numBlocks = 1;
+
+
+
+
+
+      BasicBlock blocks = null;
+
+      // initialize basic blocks
+
+
+
+
+
+
+      return blocks;
+    }
+
+
+  }
 
 
 }
