@@ -23,7 +23,6 @@ class BasicBlock {
   public static BasicBlock [] generateBlocks(VInstr [] body, VCodeLabel [] labels) {
     // count the number of basic blocks...
     ArrayList<BasicBlock> arr = new ArrayList<BasicBlock>();
-    
 
     {
       // 1. 1st Instruction=Leader
@@ -56,6 +55,8 @@ class BasicBlock {
           } 
         }
       }
+      // sort just in case basic blocks end up out of order
+      Collections.sort(arr, (a, b) -> Integer.compare(a.start, b.start));
     }
 
     // TODO: ugly hack code.
@@ -67,7 +68,7 @@ class BasicBlock {
     for(int xx=1; xx<blocks.length; xx++) {
       blocks[xx-1].end = blocks[xx].start-1;
     }
-    blocks[blocks.length-1].end = body[body.length-1].sourcePos.line;
+    blocks[blocks.length-1].end = body[body.length-1].sourcePos.line-1;
     return blocks;
   }
 

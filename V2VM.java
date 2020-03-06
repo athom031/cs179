@@ -66,7 +66,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         }
 
 
-        for(int i=function.body.length-1; i>=0;i--) {
+        /*for(int i=function.body.length-1; i>=0;i--) {
           VInstr instr = function.body[i];
           instr.accept(lvisitor);
 
@@ -79,9 +79,9 @@ class V2VM extends CommandLineLauncher.TextOutput {
             System.err.print(lvisitor.livenessArray[i][j]? "T " : "_ ");
           }
           System.err.println();
-        }
+        }*/
 
-        int labelIndex = 0;
+        /*int labelIndex = 0;
         int instrIndex = 0;
         int i = 0;
 
@@ -112,7 +112,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
           }
 
           i++;
-        }
+        }*/
       }
     } catch(Exception e) {
       e.printStackTrace();
