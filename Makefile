@@ -1,4 +1,4 @@
-FILE=1-Basic#Factorial#MoreThan4
+FILE=2-Loop#Factorial#MoreThan4
 
 vaporm:
 	javac V2VM.java

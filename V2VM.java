@@ -43,12 +43,14 @@ class V2VM extends CommandLineLauncher.TextOutput {
       // code generation
       for(VFunction function : p.functions) {
         String funcName = function.ident;
-        int inVar = function.params.length < 4? 0 : function.params.length-4;
-        int outVar = 10;//function.params.length < 3? 0 : function.params.length-3;
-        int localVar = 8;
+        int inVar = function.stack.in;//function.params.length < 4? 0 : function.params.length-4;
+        int outVar = function.stack.out;//function.params.length < 3? 0 : function.params.length-3;
+        int localVar = function.stack.local;
         lvisitor.vars = function.vars;
         lvisitor.params = function.params;
-        
+        BasicBlock [] basicBlocks = BasicBlock.generateBlocks(function.body, function.labels);
+        BasicBlock.printBasicBlocks(basicBlocks, function.body);
+
         // this is a bit silly.
         // calculate the last line of code. then create an array of line+1.
         int num = function.body[function.body.length-1].sourcePos.line+1;
@@ -74,7 +76,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
           System.err.printf("%7s: ", lvisitor.vars[i]);
           int length = lvisitor.livenessArray[0].length;
           for(int j=0; j<length; j++) {
-            System.err.print(lvisitor.livenessArray[i][j]? "t " : "_ ");
+            System.err.print(lvisitor.livenessArray[i][j]? "T " : "_ ");
           }
           System.err.println();
         }
@@ -189,7 +191,6 @@ class V2VM extends CommandLineLauncher.TextOutput {
       int line = b.sourcePos.line;
 
       livenessArray[idx][line] = true;
-      System.err.printf("HOOLA %d %d\n", idx, line);
     }
 
     @Override
@@ -727,36 +728,6 @@ class V2VM extends CommandLineLauncher.TextOutput {
     return count;
   }
 
-  public class BasicBlock {
-
-    public int start;
-    public int end;
-    public int [] entries;
-    public int [] exits;
-
-
-    public static BasicBlock [] generate(VInstr [] body, VCodeLabel [] labels) {
-      // count the number of basic blocks...
-      int numBlocks = 1;
-
-
-
-
-
-      BasicBlock blocks = null;
-
-      // initialize basic blocks
-
-
-
-
-
-
-      return blocks;
-    }
-
-
-  }
 
 
 }
