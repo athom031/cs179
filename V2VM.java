@@ -50,7 +50,6 @@ class V2VM extends CommandLineLauncher.TextOutput {
         lvisitor.params = function.params;
         BasicBlock [] basicBlocks = BasicBlock.generateBlocks(function.body, function.labels);
         BasicBlock.printBasicBlocks(basicBlocks, function.body);
-return;
         // this is a bit silly.
         // calculate the last line of code. then create an array of line+1.
         /*int num = function.body[function.body.length-1].sourcePos.line+1;

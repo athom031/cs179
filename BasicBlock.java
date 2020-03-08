@@ -102,7 +102,6 @@ class BasicBlock {
         }
 
         blocks[xx].exits = new BasicBlock[1];
-        System.err.printf(" LINE %d\n", line);
         BasicBlock gotoBlock = search(blocks, line);
         blocks[xx].exits[0] = gotoBlock; //instruction following branch
         gotoBlock.entries.add(blocks[xx]);
@@ -147,7 +146,6 @@ class BasicBlock {
       int start = b.start;
       if(start == line) return b;
     }
-    System.err.printf(" SHIT %d\n", line);
     assert(false);
     return null;
   }
