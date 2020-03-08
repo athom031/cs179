@@ -116,6 +116,7 @@ class BasicBlock {
         for(VCodeLabel lab : labels) {
           if(target.ident.equals(lab.ident)) {
             line = lab.sourcePos.line;
+            break;
           }
         }
 
@@ -138,23 +139,13 @@ class BasicBlock {
     }
 
     blocks[blocks.length-1].end = body[body.length-1].sourcePos.line;
-    //blocks[blocks.length-1].exits = new BasicBlock[0];
-    //blocks[blocks.length-1].exits[0] = null; // return statement so exit
     return blocks;
-  }
-
-  public static BasicBlock exitFunction = new BasicBlock(-999, -999);
-
-  BasicBlock(int start, int end) {
-    this.start = start;
-    this.end = end;
   }
 
   public static BasicBlock search(BasicBlock [] blocks, int line) {
     for(BasicBlock b : blocks) {
       int start = b.start;
       if(start == line) return b;
-      if(start+1 == line) return b;
     }
     System.err.printf(" SHIT %d\n", line);
     assert(false);
