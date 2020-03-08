@@ -9,9 +9,9 @@ import java.io.*;
 
 class V2VM extends CommandLineLauncher.TextOutput {
 
-  // a [t                        ] numInstrs
-  // b [                         ]
-  // c [                         ]
+  // a [t       ] numInstrs
+  // b [        ]
+  // c [        ]
   //
   //
   //
@@ -50,10 +50,10 @@ class V2VM extends CommandLineLauncher.TextOutput {
         lvisitor.params = function.params;
         BasicBlock [] basicBlocks = BasicBlock.generateBlocks(function.body, function.labels);
         BasicBlock.printBasicBlocks(basicBlocks, function.body);
-
+return;
         // this is a bit silly.
         // calculate the last line of code. then create an array of line+1.
-        int num = function.body[function.body.length-1].sourcePos.line+1;
+        /*int num = function.body[function.body.length-1].sourcePos.line+1;
         lvisitor.livenessArray = new boolean [function.vars.length][num];// [2*function.body.length];
 
 
@@ -66,12 +66,11 @@ class V2VM extends CommandLineLauncher.TextOutput {
         }
 
 
-        /*for(int i=function.body.length-1; i>=0;i--) {
+        for(int i=function.body.length-1; i>=0;i--) {
           VInstr instr = function.body[i];
           instr.accept(lvisitor);
 
         }
-
         for(int i=0; i<lvisitor.livenessArray.length; i++) {
           System.err.printf("%7s: ", lvisitor.vars[i]);
           int length = lvisitor.livenessArray[0].length;
@@ -79,15 +78,15 @@ class V2VM extends CommandLineLauncher.TextOutput {
             System.err.print(lvisitor.livenessArray[i][j]? "T " : "_ ");
           }
           System.err.println();
-        }*/
+        }
 
-        /*int labelIndex = 0;
+        int labelIndex = 0;
         int instrIndex = 0;
         int i = 0;
 
         VCodeLabel label = function.labels==null || function.labels.length==0? null : function.labels[labelIndex]; 
-        VInstr instr = function.body==null || function.body.length==0? null : function.body[instrIndex];
-
+        VInstr instr = function.body==null || function.body.length==0? null : function.body[instrIndex];*/
+/*
         while(true) {
           // print out the label
           if(label != null && label.sourcePos.line == i) {
@@ -112,7 +111,8 @@ class V2VM extends CommandLineLauncher.TextOutput {
           }
 
           i++;
-        }*/
+        }
+*/
       }
     } catch(Exception e) {
       e.printStackTrace();
@@ -166,11 +166,10 @@ class V2VM extends CommandLineLauncher.TextOutput {
 
       int idx = getID(dest.toString());
       int line = a.sourcePos.line + 1;
-      // TODO: This sucks!
-      while(line < livenessArray[0].length && !livenessArray[idx][line]) {
+      /*while(line < livenessArray[0].length && !livenessArray[idx][line]) {
         livenessArray[idx][line] = true;
         line++;
-      } 
+      }*/
 
       if(src instanceof VLitInt) {
         return;
