@@ -202,7 +202,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
     void printLiveness() {
       System.err.println();
       for(int i=0; i<livenessArray.length; i++) {
-        System.err.printf("var: %7s", vars[i]);
+        System.err.printf("%15s:  ", vars[i]);
         int lines = livenessArray[i].length;
         for(int j=0; j<lines; j++) {
           System.err.printf("%s", livenessArray[i][j]? "|" : "_");
@@ -257,8 +257,14 @@ class V2VM extends CommandLineLauncher.TextOutput {
       int idx = getID(variable);
 
       setLivenessTrue(idx, line);
-      propagateLiveness(line, currentBlock.exits[0].start, variable);
-      propagateLiveness(line, currentBlock.exits[1].start, variable);
+      //System.err.println(currentBlock.exits+" "+currentBlock.exits.length);
+      propagateLiveness(line, line+1, variable);
+      if(currentBlock.exits != null) {
+        for(BasicBlock exit : currentBlock.exits) {
+          if(exit != null)
+            propagateLiveness(line, exit.start, variable);
+        }
+      }
     }
 
     @Override
@@ -269,98 +275,103 @@ class V2VM extends CommandLineLauncher.TextOutput {
       String varName = dest!=null? dest.toString() : null;
       switch(op.name) {
       case "Add": {
-        if(!(args[0] instanceof VLitInt)) {
-          int idx = getID(args[0].toString());
+        String a = args[0] instanceof VLitInt? null : args[0].toString();
+        String b = args[1] instanceof VLitInt? null : args[1].toString();
+        if(a != null) {
+          int idx = getID(a);
           setLivenessTrue(idx, line);
         }
 
-        if(!(args[1] instanceof VLitInt)) {
-          int idx = getID(args[1].toString());
+        if(b != null) {
+          int idx = getID(b);
           setLivenessTrue(idx, line);
         }
-        String a = args[0] instanceof VLitInt? null : args[0].toString();
-        String b = args[1] instanceof VLitInt? null : args[1].toString();
+
         propagateLiveness(line, line+1, varName, a, b);
         break;
       }
 
       case "Sub": {
-        if(!(args[0] instanceof VLitInt)) {
-          int idx = getID(args[0].toString());
+        String a = args[0] instanceof VLitInt? null : args[0].toString();
+        String b = args[1] instanceof VLitInt? null : args[1].toString();
+
+        if(a != null) {
+          int idx = getID(a);
           setLivenessTrue(idx, line);
         }
 
-        if(!(args[1] instanceof VLitInt)) {
-          int idx = getID(args[1].toString());
+        if(b != null) {
+          int idx = getID(b);
           setLivenessTrue(idx, line);
         }
-        String a = args[0] instanceof VLitInt? null : args[0].toString();
-        String b = args[1] instanceof VLitInt? null : args[1].toString();
         propagateLiveness(line, line+1, varName, a, b);
         break;
       }
 
       case "MulS": {
-        if(!(args[0] instanceof VLitInt)) {
-          int idx = getID(args[0].toString());
+        String a = args[0] instanceof VLitInt? null : args[0].toString();
+        String b = args[1] instanceof VLitInt? null : args[1].toString();
+
+        if(a != null) {
+          int idx = getID(a);
           setLivenessTrue(idx, line);
         }
 
-        if(!(args[1] instanceof VLitInt)) {
-          int idx = getID(args[1].toString());
+        if(b != null) {
+          int idx = getID(b);
           setLivenessTrue(idx, line);
         }
-        String a = args[0] instanceof VLitInt? null : args[0].toString();
-        String b = args[1] instanceof VLitInt? null : args[1].toString();
         propagateLiveness(line, line+1, varName, a, b);
         break;
       }
 
       case "Eq": {
-
-        if(!(args[0] instanceof VLitInt)) {
-          int idx = getID(args[0].toString());
-          setLivenessTrue(idx, line);
-        }
-
-        if(!(args[1] instanceof VLitInt)) {
-          int idx = getID(args[1].toString());
-          setLivenessTrue(idx, line);
-        }
         String a = args[0] instanceof VLitInt? null : args[0].toString();
         String b = args[1] instanceof VLitInt? null : args[1].toString();
+
+        if(a != null) {
+          int idx = getID(a);
+          setLivenessTrue(idx, line);
+        }
+
+        if(b != null) {
+          int idx = getID(b);
+          setLivenessTrue(idx, line);
+        }
         propagateLiveness(line, line+1, varName, a, b);
         break;
       }
 
       case "Lt": {
-        if(!(args[0] instanceof VLitInt)) {
-          int idx = getID(args[0].toString());
+        String a = args[0] instanceof VLitInt? null : args[0].toString();
+        String b = args[1] instanceof VLitInt? null : args[1].toString();
+
+        if(a != null) {
+          int idx = getID(a);
           setLivenessTrue(idx, line);
         }
 
-        if(!(args[1] instanceof VLitInt)) {
-          int idx = getID(args[1].toString());
+        if(b != null) {
+          int idx = getID(b);
           setLivenessTrue(idx, line);
         }
-        String a = args[0] instanceof VLitInt? null : args[0].toString();
-        String b = args[1] instanceof VLitInt? null : args[1].toString();
         propagateLiveness(line, line+1, varName, a, b);
         break;
       }
 
       case "LtS": {
-        if(!(args[0] instanceof VLitInt)) {
-          int idx = getID(args[0].toString());
+        String a = args[0] instanceof VLitInt? null : args[0].toString();
+        String b = args[1] instanceof VLitInt? null : args[1].toString();
+
+        if(a != null) {
+          int idx = getID(a);
           setLivenessTrue(idx, line);
         }
 
-        if(!(args[1] instanceof VLitInt)) {
-          int idx = getID(args[1].toString());
+        if(b != null) {
+          int idx = getID(b);
           setLivenessTrue(idx, line);
         }
-        String a = args[0] instanceof VLitInt? null : args[0].toString();
-        String b = args[1] instanceof VLitInt? null : args[1].toString();
         propagateLiveness(line, line+1, varName, a, b);
         break;
       }
@@ -412,7 +423,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
       int min = args.length < 4? args.length : 4;
 
       this.outVar = Integer.max(outVar, args.length<4? 0 : args.length-4);
-      int length = args.length;
+      int length = args.length+1;
       String addrName = addr.toString();
       int idx = getID(addrName);
       if(idx != -1) {
@@ -433,6 +444,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
       if(idx != -1) {
         int last = length-1;
         function[last] = addrName;
+        function[last-1] = dest.toString();
       }
       propagateLiveness(line, line+1, function);
     }
@@ -457,7 +469,6 @@ class V2VM extends CommandLineLauncher.TextOutput {
 
       } else if(src instanceof VMemRef.Stack) {
         VMemRef.Stack ss = (VMemRef.Stack) src;
-        System.err.printf("VMEMREAD___%s %d\n", ss.region, ss.index);
       } 
     }
 
@@ -707,7 +718,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         d = "";
       }
 
-      System.out.printf("  [%s%s] = %s\n", d, offset>0?"+"+offset:"", s);
+      System.out.printf("  [%s+%d] = %s\n", d, offset, s);
     }
 
     @Override

@@ -1,4 +1,4 @@
-FILE=QuickSort
+FILE=LinkedList
 
 vaporm:
 	javac -g V2VM.java
