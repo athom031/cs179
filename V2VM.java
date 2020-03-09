@@ -9,17 +9,6 @@ import java.io.*;
 
 class V2VM extends CommandLineLauncher.TextOutput {
 
-  // a [t       ] numInstrs
-  // b [        ]
-  // c [        ]
-  //
-  //
-  //
-
-  // TODO: Registor allocation graph coloring algorithm is working consistently
-  // Code generation works for trivial cases like 1-Basic and 2-Loop
-  // However, it cannot handle more complicated cases.
-
   public static void main(String[] args) {
     CommandLineLauncher.run(new V2VM(), args);
   }
@@ -107,11 +96,6 @@ class V2VM extends CommandLineLauncher.TextOutput {
           for(int i=0; i<visitor.graphColor.length;i++) {
             visitor.maxColor = Integer.max(visitor.graphColor[i], visitor.maxColor);
           }
-          System.err.printf("MAX COLOR: %d\n", visitor.maxColor);
-          /*for(int i=0; i<visitor.graphColor.length;i++) {
-            if(visitor.graphColor[i] != -1)
-              visitor.graphColor[i] = visitor.maxColor-visitor.graphColor[i];
-          }*/
         }
 
         int labelIndex = 0;
@@ -238,7 +222,6 @@ class V2VM extends CommandLineLauncher.TextOutput {
           }
         }
         if(isReferredTo) continue;
-        //TODO: Just in case there's a bug...
         if(livenessArray[i][nextLine] == true) {
           setLivenessTrue(i, currentLine);
         } 
@@ -443,6 +426,8 @@ class V2VM extends CommandLineLauncher.TextOutput {
         if(id != -1) {
           setLivenessTrue(id, line);
           function[j] = arg;
+        } else {
+          //System.err.printf(" ARGUMENT %s %d\n", arg, line);
         }
       }
       if(idx != -1) {
@@ -468,13 +453,11 @@ class V2VM extends CommandLineLauncher.TextOutput {
         String d = dest.toString();
         int idx = getID(s);
         setLivenessTrue(idx, line);
-        if(!s.equals(d)) {
-          propagateLiveness(line, line+1, s, dest.toString());
-        }
+        propagateLiveness(line, line+1, s, dest.toString());
 
       } else if(src instanceof VMemRef.Stack) {
         VMemRef.Stack ss = (VMemRef.Stack) src;
-        //System.err.printf("VMEMREAD___%s %d\n", ss.region, ss.index);
+        System.err.printf("VMEMREAD___%s %d\n", ss.region, ss.index);
       } 
     }
 
@@ -487,6 +470,8 @@ class V2VM extends CommandLineLauncher.TextOutput {
         String s = gg.base.toString();
         int idx = getID(s);
         setLivenessTrue(idx, line);
+      } else if(dest instanceof VMemRef.Stack) {
+
       }
 
       if(src instanceof VLitInt || src instanceof VLabelRef) {
@@ -695,19 +680,15 @@ class V2VM extends CommandLineLauncher.TextOutput {
       VVarRef dest = r.dest;
       VMemRef src = r.source;
       String d = mapToRegister(dest.toString());
-      int offset = 0;
-      String s;
+      // NOTE: Vapor line nums do not correspond to VaporM line nums
       if(src instanceof VMemRef.Global) {
         VMemRef.Global gg = (VMemRef.Global) src;
-        s = mapToRegister(gg.base.toString());
-        offset = gg.byteOffset;
-      } else {
-        s = "";
-      }
-      if(offset>0)
+        String s = mapToRegister(gg.base.toString());
+        int offset = gg.byteOffset;
         System.out.printf("  %s = [%s+%d]\n", d, s, offset);
-      else
-        System.out.printf("  %s = [%s]\n", d, s);
+      } else if(src instanceof VMemRef.Stack) {
+        ;
+      }
     }
 
     @Override
@@ -779,7 +760,9 @@ class V2VM extends CommandLineLauncher.TextOutput {
         }
       }
     } while(repeat==true);
-
+    for(boolean [] m : matrix) {
+      for(boolean b : m) if(b!=false) {System.err.println("BIG FAT ERROR");assert(b == false);}
+    }
 
     boolean [] col = new boolean[size];
     while(top > -1) {

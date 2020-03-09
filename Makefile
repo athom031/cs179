@@ -1,4 +1,4 @@
-FILE=TreeVisitor
+FILE=QuickSort
 
 vaporm:
 	javac -g V2VM.java
