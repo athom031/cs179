@@ -56,8 +56,16 @@ class V2VM extends CommandLineLauncher.TextOutput {
           lvisitor.instr = function.body;
           // visit instructions, compute liveness
           do {
+            int bbIdx = basicBlocks.length-1;
+            lvisitor.currentBlock = basicBlocks[bbIdx];
             lvisitor.loopAgain=false;
             for(int i=function.body.length-1; i>=0;i--) {
+              // change to a new block..
+              if(i < lvisitor.currentBlock.start) {
+                bbIdx = bbIdx - 1;
+                lvisitor.currentBlock = basicBlocks[bbIdx];
+              }
+              System.err.printf("start: %4d, end: %4d\n", lvisitor.currentBlock.start, lvisitor.currentBlock.end);
               VInstr instr = function.body[i];
               instr.accept(i, lvisitor);
             }
@@ -159,6 +167,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
     public boolean [][] livenessArray = null;
     public boolean loopAgain = false;
     public VInstr [] instr = null;
+    public BasicBlock currentBlock = null;
 
     int getID(String v) {
       for(int i=0; i<vars.length; i++) {
@@ -169,6 +178,28 @@ class V2VM extends CommandLineLauncher.TextOutput {
       return -1;
     }
 
+    void setLivenessTrue(int i, int j) {
+      if(livenessArray[i][j] == false) {
+        livenessArray[i][j] = true;
+        loopAgain = true;
+      }
+    }
+
+    void propagateLiveness(int currentLine, int nextLine, String ... args) {
+      System.out.printf("cur %d, next %d, args: %s\n", currentLine, nextLine, args[0]);
+      for(int i=0; i<vars.length; i++) {
+        boolean isReferredTo = false;
+        for(String a : args) {
+          if(a.equals(vars[i])) {
+            isReferredTo = true;
+            break;
+          }
+        }
+        if(isReferredTo) continue;
+        setLivenessTrue(i, currentLine);
+      }
+    }
+
     @Override
     public void visit(Integer line, VAssign a) throws Exception {
       VVarRef dest = a.dest;
@@ -176,11 +207,11 @@ class V2VM extends CommandLineLauncher.TextOutput {
       // source
       if(!(src instanceof VLitInt)) {
         int idx = getID(src.toString());
-        livenessArray[idx][line] = true;
+        setLivenessTrue(idx, line);
       } 
       
       // destination
-
+      int destIndex = getID(dest.toString());
     }
 
     @Override
@@ -188,10 +219,13 @@ class V2VM extends CommandLineLauncher.TextOutput {
       boolean positive = b.positive;
       VLabelRef<VCodeLabel> target = b.target;
       VOperand value = b.value;
+      String variable = value.toString();
+      int idx = getID(variable);
 
-      int idx = getID(value.toString());
+      setLivenessTrue(idx, line);
 
-      livenessArray[idx][line] = true;
+      propagateLiveness(line, currentBlock.exits[0].start, variable);
+      propagateLiveness(line, currentBlock.exits[1].start, variable);
     }
 
     @Override
@@ -203,12 +237,12 @@ class V2VM extends CommandLineLauncher.TextOutput {
       case "Add": {
         if(!(args[0] instanceof VLitInt)) {
           int idx = getID(args[0].toString());
-          livenessArray[idx][line] = true;
+          setLivenessTrue(idx, line);
         }
 
         if(!(args[1] instanceof VLitInt)) {
           int idx = getID(args[1].toString());
-          livenessArray[idx][line] = true;
+          setLivenessTrue(idx, line);
         }
 
         break;
@@ -217,12 +251,12 @@ class V2VM extends CommandLineLauncher.TextOutput {
       case "Sub": {
         if(!(args[0] instanceof VLitInt)) {
           int idx = getID(args[0].toString());
-          livenessArray[idx][line] = true;
+          setLivenessTrue(idx, line);
         }
 
         if(!(args[1] instanceof VLitInt)) {
           int idx = getID(args[1].toString());
-          livenessArray[idx][line] = true;
+          setLivenessTrue(idx, line);
         }
         break;
       }
@@ -230,12 +264,12 @@ class V2VM extends CommandLineLauncher.TextOutput {
       case "MulS": {
         if(!(args[0] instanceof VLitInt)) {
           int idx = getID(args[0].toString());
-          livenessArray[idx][line] = true;
+          setLivenessTrue(idx, line);
         }
 
         if(!(args[1] instanceof VLitInt)) {
           int idx = getID(args[1].toString());
-          livenessArray[idx][line] = true;
+          setLivenessTrue(idx, line);
         }
         break;
       }
@@ -244,12 +278,12 @@ class V2VM extends CommandLineLauncher.TextOutput {
 
         if(!(args[0] instanceof VLitInt)) {
           int idx = getID(args[0].toString());
-          livenessArray[idx][line] = true;
+          setLivenessTrue(idx, line);
         }
 
         if(!(args[1] instanceof VLitInt)) {
           int idx = getID(args[1].toString());
-          livenessArray[idx][line] = true;
+          setLivenessTrue(idx, line);
         }
         break;
       }
@@ -258,12 +292,12 @@ class V2VM extends CommandLineLauncher.TextOutput {
 
         if(!(args[0] instanceof VLitInt)) {
           int idx = getID(args[0].toString());
-          livenessArray[idx][line] = true;
+          setLivenessTrue(idx, line);
         }
 
         if(!(args[1] instanceof VLitInt)) {
           int idx = getID(args[1].toString());
-          livenessArray[idx][line] = true;
+          setLivenessTrue(idx, line);
         }
         break;
       }
@@ -272,12 +306,12 @@ class V2VM extends CommandLineLauncher.TextOutput {
 
         if(!(args[0] instanceof VLitInt)) {
           int idx = getID(args[0].toString());
-          livenessArray[idx][line] = true;
+          setLivenessTrue(idx, line);
         }
 
         if(!(args[1] instanceof VLitInt)) {
           int idx = getID(args[1].toString());
-          livenessArray[idx][line] = true;
+          setLivenessTrue(idx, line);
         }
         break;
       }
@@ -286,7 +320,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         if(args[0] instanceof VOperand) {
           int idx = getID(args[0].toString());
           if(idx != -1) {
-            livenessArray[idx][line] = true;
+            setLivenessTrue(idx, line);
           }
         }
 
@@ -297,7 +331,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         if(!(args[0] instanceof VLitInt)) {
           int idx = getID(args[0].toString());
           if(idx != -1) { 
-            livenessArray[idx][line] = true;
+            setLivenessTrue(idx, line);
           }
         }
         break;
@@ -324,13 +358,13 @@ class V2VM extends CommandLineLauncher.TextOutput {
       for(VOperand a : args) {
         int idx = getID(a.toString());
         if(idx != -1) {
-          livenessArray[idx][line] = true;
+          setLivenessTrue(idx, line);
         }
       }
 
       int idx = getID(addr.toString());
       if(idx != -1) {
-        livenessArray[idx][line] = true;
+        setLivenessTrue(idx, line);
       }
     }
 
@@ -353,7 +387,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         s = "";
       }
       int idx = getID(s);
-      livenessArray[idx][line] = true;
+      setLivenessTrue(idx, line);
 
     }
 
@@ -368,8 +402,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         return;
       } else {
         int idx = getID(src.toString());
-        System.out.println(src.toString() + " "+src.getClass().toString());
-        livenessArray[idx][line] = true;
+        setLivenessTrue(idx, line);
       }
     }
 
@@ -380,7 +413,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         int idx = getID(value.toString());
 
         if(idx == -1) return;
-        livenessArray[idx][line] = true;
+        setLivenessTrue(idx, line);
       }
     }
 
