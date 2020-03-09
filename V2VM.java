@@ -54,6 +54,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
           lvisitor.vars = function.vars;
           lvisitor.params = function.params;
           lvisitor.instr = function.body;
+          lvisitor.outVar = 0;
           // visit instructions, compute liveness
           do {
             int bbIdx = basicBlocks.length-1;
@@ -112,8 +113,8 @@ class V2VM extends CommandLineLauncher.TextOutput {
 
         {
           String funcName = function.ident;
-          int inVar = function.stack.in;
-          int outVar = function.stack.out;
+          int inVar = function.params.length<4? 0 : function.params.length-4;
+          int outVar = lvisitor.outVar;//function.stack.out;
           int localVar = function.stack.local;
           System.out.printf("func %s [in %d, out %d, local %d]\n", funcName, inVar, outVar, localVar);
           if(!funcName.equals("Main")) {
@@ -186,6 +187,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
     public boolean loopAgain = false;
     public VInstr [] instr = null;
     public BasicBlock currentBlock = null;
+    public int outVar = 0;
 
     int getID(String v) {
       for(int i=0; i<vars.length; i++)
@@ -397,6 +399,9 @@ class V2VM extends CommandLineLauncher.TextOutput {
       VOperand [] args = c.args;
       VVarRef.Local dest = c.dest;
       int min = args.length < 4? args.length : 4;
+
+      this.outVar = Integer.max(outVar, args.length<4? 0 : args.length-4);
+
       for(VOperand a : args) {
         int idx = getID(a.toString());
         if(idx != -1) {
