@@ -22,12 +22,16 @@ class BasicBlock {
 
   public static BasicBlock [] generateBlocks(VInstr [] body, VCodeLabel [] labels) {
     HashMap<Integer, VInstr> mapInstr = new HashMap<Integer, VInstr>();
+    HashMap<Integer, Integer> mapLines = new HashMap<Integer, Integer>();
     HashMap<Integer, VCodeLabel> mapLabel = new HashMap<Integer, VCodeLabel>();
     for(VInstr i : body) {
       mapInstr.put(i.sourcePos.line, i);
     }
     for(VCodeLabel l : labels) {
       mapLabel.put(l.sourcePos.line, l);
+    }
+    for(int i=0; i<body.length; i++) {
+      mapLines.put(body[i].sourcePos.line, i);
     }
 
     // count the number of basic blocks...
@@ -138,6 +142,24 @@ class BasicBlock {
     }
 
     blocks[blocks.length-1].end = body[body.length-1].sourcePos.line;
+
+    for(int i=0; i<blocks.length; i++) {
+      Integer start = mapLines.get(blocks[i].start);
+      Integer end = mapLines.get(blocks[i].end);
+      // ugly code...
+      while(start==null) {
+        blocks[i].start++;
+        start = mapLines.get(blocks[i].start);
+      }
+      while(end==null) {
+        blocks[i].end++;
+        end = mapLines.get(blocks[i].end);
+      }
+
+      blocks[i].start = start;
+      blocks[i].end = end;
+    }
+
     return blocks;
   }
 

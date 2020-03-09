@@ -42,34 +42,43 @@ class V2VM extends CommandLineLauncher.TextOutput {
 
       // code generation
       for(VFunction function : p.functions) {
-        String funcName = function.ident;
-        int inVar = function.stack.in;//function.params.length < 4? 0 : function.params.length-4;
-        int outVar = function.stack.out;//function.params.length < 3? 0 : function.params.length-3;
-        int localVar = function.stack.local;
-        lvisitor.vars = function.vars;
-        lvisitor.params = function.params;
+
         BasicBlock [] basicBlocks = BasicBlock.generateBlocks(function.body, function.labels);
-        BasicBlock.printBasicBlocks(basicBlocks, function.body);
-        // this is a bit silly.
-        // calculate the last line of code. then create an array of line+1.
-        /*int num = function.body[function.body.length-1].sourcePos.line+1;
-        lvisitor.livenessArray = new boolean [function.vars.length][num];// [2*function.body.length];
+        //BasicBlock.printBasicBlocks(basicBlocks, function.body);
 
+        {
+          // initialize liveness visitor
+          int functVars = function.vars.length;
+          int linesCode = function.body.length;
+          lvisitor.livenessArray = new boolean [functVars][linesCode];
+          lvisitor.vars = function.vars;
+          lvisitor.params = function.params;
+          lvisitor.instr = function.body;
+          // visit instructions, compute liveness
+          do {
+            lvisitor.loopAgain=false;
+            for(int i=function.body.length-1; i>=0;i--) {
+              VInstr instr = function.body[i];
+              instr.accept(i, lvisitor);
+            }
+          } while(lvisitor.loopAgain==true);
+        }
 
-
+        // initialize visitor
         visitor.vars = function.vars;
         visitor.params = function.params;
-        System.out.printf("func %s [in %d, out %d, local %d]\n", funcName, inVar, outVar, localVar);
-        if(!funcName.equals("Main")) {
-          visitor.handleParams();
+
+        {
+          String funcName = function.ident;
+          int inVar = function.stack.in;
+          int outVar = function.stack.out;
+          int localVar = function.stack.local;
+          System.out.printf("func %s [in %d, out %d, local %d]\n", funcName, inVar, outVar, localVar);
+          if(!funcName.equals("Main")) {
+            visitor.handleParams();
+          }
         }
 
-
-        for(int i=function.body.length-1; i>=0;i--) {
-          VInstr instr = function.body[i];
-          instr.accept(lvisitor);
-
-        }
         for(int i=0; i<lvisitor.livenessArray.length; i++) {
           System.err.printf("%7s: ", lvisitor.vars[i]);
           int length = lvisitor.livenessArray[0].length;
@@ -84,7 +93,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         int i = 0;
 
         VCodeLabel label = function.labels==null || function.labels.length==0? null : function.labels[labelIndex]; 
-        VInstr instr = function.body==null || function.body.length==0? null : function.body[instrIndex];*/
+        VInstr instr = function.body==null || function.body.length==0? null : function.body[instrIndex];
 /*
         while(true) {
           // print out the label
@@ -143,11 +152,13 @@ class V2VM extends CommandLineLauncher.TextOutput {
     }
   }
 
-  class LivenessVisitor extends VInstr.Visitor<Exception> {
+  class LivenessVisitor extends VInstr.VisitorP<Integer, Exception> {
 
     public String [] vars = null;
     public VVarRef.Local [] params = null;
     public boolean [][] livenessArray = null;
+    public boolean loopAgain = false;
+    public VInstr [] instr = null;
 
     int getID(String v) {
       for(int i=0; i<vars.length; i++) {
@@ -159,103 +170,73 @@ class V2VM extends CommandLineLauncher.TextOutput {
     }
 
     @Override
-    public void visit(VAssign a) throws Exception {
+    public void visit(Integer line, VAssign a) throws Exception {
       VVarRef dest = a.dest;
       VOperand src = a.source;
-
-      int idx = getID(dest.toString());
-      int line = a.sourcePos.line + 1;
-      /*while(line < livenessArray[0].length && !livenessArray[idx][line]) {
+      // source
+      if(!(src instanceof VLitInt)) {
+        int idx = getID(src.toString());
         livenessArray[idx][line] = true;
-        line++;
-      }*/
-
-      if(src instanceof VLitInt) {
-        return;
       } 
       
-      idx = getID(src.toString());
-      livenessArray[idx][line] = true;
+      // destination
 
     }
 
     @Override
-    public void visit(VBranch b) throws Exception {
+    public void visit(Integer line, VBranch b) throws Exception {
       boolean positive = b.positive;
       VLabelRef<VCodeLabel> target = b.target;
       VOperand value = b.value;
 
       int idx = getID(value.toString());
-      int line = b.sourcePos.line;
 
       livenessArray[idx][line] = true;
     }
 
     @Override
-    public void visit(VBuiltIn b) throws Exception {
+    public void visit(Integer line, VBuiltIn b) throws Exception {
       VOperand [] args = b.args;
       VVarRef dest = b.dest;
       VBuiltIn.Op op = b.op;
       switch(op.name) {
       case "Add": {
-        //String d = mapToRegister(dest.toString());
-        //String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
         if(!(args[0] instanceof VLitInt)) {
           int idx = getID(args[0].toString());
-          int line = b.sourcePos.line;
           livenessArray[idx][line] = true;
         }
 
         if(!(args[1] instanceof VLitInt)) {
           int idx = getID(args[1].toString());
-          int line = b.sourcePos.line;
           livenessArray[idx][line] = true;
         }
 
-        //String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
         break;
       }
 
       case "Sub": {
-
         if(!(args[0] instanceof VLitInt)) {
           int idx = getID(args[0].toString());
-          int line = b.sourcePos.line;
           livenessArray[idx][line] = true;
         }
 
         if(!(args[1] instanceof VLitInt)) {
           int idx = getID(args[1].toString());
-          int line = b.sourcePos.line;
           livenessArray[idx][line] = true;
         }
-
-
-        //String d = mapToRegister(dest.toString());
-        //String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
-        //String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
         break;
       }
 
       case "MulS": {
-
         if(!(args[0] instanceof VLitInt)) {
           int idx = getID(args[0].toString());
-          int line = b.sourcePos.line;
           livenessArray[idx][line] = true;
         }
 
         if(!(args[1] instanceof VLitInt)) {
           int idx = getID(args[1].toString());
-          int line = b.sourcePos.line;
           livenessArray[idx][line] = true;
         }
-
-
-
-        //String d = mapToRegister(dest.toString());
-        //String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
-        //String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
         break;
       }
 
@@ -263,20 +244,13 @@ class V2VM extends CommandLineLauncher.TextOutput {
 
         if(!(args[0] instanceof VLitInt)) {
           int idx = getID(args[0].toString());
-          int line = b.sourcePos.line;
           livenessArray[idx][line] = true;
         }
 
         if(!(args[1] instanceof VLitInt)) {
           int idx = getID(args[1].toString());
-          int line = b.sourcePos.line;
           livenessArray[idx][line] = true;
         }
-
-
-        //String d = mapToRegister(dest.toString());
-        //String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
-        //String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
         break;
       }
 
@@ -284,21 +258,13 @@ class V2VM extends CommandLineLauncher.TextOutput {
 
         if(!(args[0] instanceof VLitInt)) {
           int idx = getID(args[0].toString());
-          int line = b.sourcePos.line;
           livenessArray[idx][line] = true;
         }
 
         if(!(args[1] instanceof VLitInt)) {
           int idx = getID(args[1].toString());
-          int line = b.sourcePos.line;
           livenessArray[idx][line] = true;
         }
-
-
-
-        //String d = mapToRegister(dest.toString());
-        //String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
-        //String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
         break;
       }
 
@@ -306,42 +272,33 @@ class V2VM extends CommandLineLauncher.TextOutput {
 
         if(!(args[0] instanceof VLitInt)) {
           int idx = getID(args[0].toString());
-          int line = b.sourcePos.line;
           livenessArray[idx][line] = true;
         }
 
         if(!(args[1] instanceof VLitInt)) {
           int idx = getID(args[1].toString());
-          int line = b.sourcePos.line;
           livenessArray[idx][line] = true;
         }
-
-
-
-        //String d = mapToRegister(dest.toString());
-        //String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
-        //String a1 = (args[1] instanceof VLitInt)? args[1].toString() : mapToRegister(args[1].toString());
         break;
       }
 
       case "PrintIntS": {
-        //String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
         if(args[0] instanceof VOperand) {
           int idx = getID(args[0].toString());
-          int line = b.sourcePos.line;
-          livenessArray[idx][line] = true;
+          if(idx != -1) {
+            livenessArray[idx][line] = true;
+          }
         }
 
         break;
       }
 
       case "HeapAllocZ": {
-        //String a0 = (args[0] instanceof VLitInt)? args[0].toString() : mapToRegister(args[0].toString());
-        //String d = mapToRegister(dest.toString());
         if(!(args[0] instanceof VLitInt)) {
           int idx = getID(args[0].toString());
-          int line = b.sourcePos.line;
-          livenessArray[idx][line] = true;
+          if(idx != -1) { 
+            livenessArray[idx][line] = true;
+          }
         }
         break;
       }
@@ -359,24 +316,11 @@ class V2VM extends CommandLineLauncher.TextOutput {
     }
 
     @Override
-    public void visit(VCall c) throws Exception {
+    public void visit(Integer line, VCall c) throws Exception {
       VAddr<VFunction> addr = c.addr;
       VOperand [] args = c.args;
       VVarRef.Local dest = c.dest;
       int min = args.length < 4? args.length : 4;
-
-      /*for(int i = 0; i < min; i++) {
-        //String a = mapToRegister(args[i].toString());
-      }
-
-      for(int i = 4; i < args.length; i++) {
-        //String a = mapToRegister(args[i].toString());
-      }*/
-
-      //String a = mapToRegister(addr.toString());
-      //String d = mapToRegister(dest.toString());
-
-      int line = c.sourcePos.line;
       for(VOperand a : args) {
         int idx = getID(a.toString());
         if(idx != -1) {
@@ -391,15 +335,14 @@ class V2VM extends CommandLineLauncher.TextOutput {
     }
 
     @Override
-    public void visit(VGoto g) throws Exception {
+    public void visit(Integer line, VGoto g) throws Exception {
       VAddr<VCodeLabel> target = g.target;
     }
 
     @Override
-    public void visit(VMemRead r) throws Exception {
+    public void visit(Integer line, VMemRead r) throws Exception {
       VVarRef dest = r.dest;
       VMemRef src = r.source;
-      //String d = mapToRegister(dest.toString());
       int offset = 0;
       String s;
       if(src instanceof VMemRef.Global) {
@@ -410,13 +353,13 @@ class V2VM extends CommandLineLauncher.TextOutput {
         s = "";
       }
       int idx = getID(s);
-      int line = r.sourcePos.line;
       livenessArray[idx][line] = true;
 
     }
 
     @Override
-    public void visit(VMemWrite w) throws Exception {
+    public void visit(Integer line, VMemWrite w) throws Exception {
+      // TODO: FIX
       VMemRef dest = w.dest;
       VOperand src = w.source;
       if(src instanceof VLitInt) {
@@ -425,19 +368,16 @@ class V2VM extends CommandLineLauncher.TextOutput {
         return;
       } else {
         int idx = getID(src.toString());
-        int line = w.sourcePos.line;
         System.out.println(src.toString() + " "+src.getClass().toString());
         livenessArray[idx][line] = true;
       }
     }
 
     @Override
-    public void visit(VReturn r) throws Exception {
+    public void visit(Integer line, VReturn r) throws Exception {
       VOperand value = r.value;
       if(value != null) {
-        //String v = (value instanceof VLitInt)? value.toString() : mapToRegister(value.toString());
         int idx = getID(value.toString());
-        int line = r.sourcePos.line;
 
         if(idx == -1) return;
         livenessArray[idx][line] = true;
