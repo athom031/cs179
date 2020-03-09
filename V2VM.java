@@ -100,8 +100,11 @@ class V2VM extends CommandLineLauncher.TextOutput {
               }
             }
           }
-          int numRegs = 8;
+          int numRegs = 9;
           visitor.graphColor = graphColor(matrix, numRegs);
+          for(int i=0; i<visitor.graphColor.length;i++) {
+            visitor.maxColor = Integer.max(visitor.graphColor[i], visitor.maxColor);
+          }
         }
 
         int labelIndex = 0;
@@ -115,7 +118,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
           String funcName = function.ident;
           int inVar = function.params.length<4? 0 : function.params.length-4;
           int outVar = lvisitor.outVar;//function.stack.out;
-          int localVar = function.stack.local;
+          int localVar = visitor.maxColor+1;//function.stack.local;
           System.out.printf("func %s [in %d, out %d, local %d]\n", funcName, inVar, outVar, localVar);
           if(!funcName.equals("Main")) {
             visitor.handleParams();
@@ -471,6 +474,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
     public String [] vars = null;
     public VVarRef.Local [] params = null;
     public int [] graphColor = null;
+    public int maxColor = 0;
 
     String mapToRegister(String name) {
       for(int i = 0; i < vars.length; i++) {
@@ -602,6 +606,11 @@ class V2VM extends CommandLineLauncher.TextOutput {
       VOperand [] args = c.args;
       VVarRef.Local dest = c.dest;
       int min = args.length < 4? args.length : 4;
+      //System.err.printf(" MAX COLORS: %d\n", maxColor);
+      // save the registers.
+      for(int i=0; i<=maxColor; i++) {
+        System.out.printf("  local[%d] = $t%d\n", i, i);
+      }
 
       for(int i = 0; i < min; i++) {
         String a = mapToRegister(args[i].toString());
@@ -618,6 +627,12 @@ class V2VM extends CommandLineLauncher.TextOutput {
 
       String d = mapToRegister(dest.toString());
       System.out.printf("  call %s\n", a);
+
+      //load back the registers
+      for(int i=0; i<=maxColor; i++) {
+        System.out.printf("  $t%d = local[%d]\n", i, i);
+      }
+
       System.out.printf("  %s = $v0\n", d);
     }
 
