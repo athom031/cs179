@@ -86,14 +86,12 @@ class BasicBlock {
       //
       VInstr instr = mapInstr.get(end);
       if(instr == null) instr = mapInstr.get(end+1);
-      //if(instr == null) instr = mapInstr.get(end-1);
       if(instr instanceof VGoto) {
         VGoto g = (VGoto) instr;
         VAddr<VCodeLabel> target = g.target;
         int line = -1;
         if(target instanceof VAddr.Label) {
           VAddr.Label l = (VAddr.Label) target;
-          //line = l.label.sourcePos.line;
           for(VCodeLabel lab : labels) {
             if(l.label.ident.equals(lab.ident)) {
               line = lab.sourcePos.line;
@@ -101,7 +99,6 @@ class BasicBlock {
           }
           
         } else if(target instanceof VAddr.Var) {
-          VAddr.Var l = (VAddr.Var) target;
           assert(false);//not handled
         }
 

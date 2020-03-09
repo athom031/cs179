@@ -44,7 +44,6 @@ class V2VM extends CommandLineLauncher.TextOutput {
       for(VFunction function : p.functions) {
 
         BasicBlock [] basicBlocks = BasicBlock.generateBlocks(function.body, function.labels);
-        //BasicBlock.printBasicBlocks(basicBlocks, function.body);
 
         {
           // initialize liveness visitor
@@ -75,18 +74,9 @@ class V2VM extends CommandLineLauncher.TextOutput {
         // initialize visitor
         visitor.vars = function.vars;
         visitor.params = function.params;
-
-
-        /*for(int i=0; i<lvisitor.livenessArray.length; i++) {
-          System.err.printf("%7s: ", lvisitor.vars[i]);
-          int length = lvisitor.livenessArray[0].length;
-          for(int j=0; j<length; j++) {
-            System.err.print(lvisitor.livenessArray[i][j]? "T " : "_ ");
-          }
-          System.err.println();
-        }*/
         
         {
+          lvisitor.printLiveness();
           boolean [][] livenessArray = lvisitor.livenessArray;
           int functVars = function.vars.length;
           int linesCode = function.body.length;
@@ -100,11 +90,28 @@ class V2VM extends CommandLineLauncher.TextOutput {
               }
             }
           }
-          int numRegs = 9;
+
+          int numRegs = 8+9;
           visitor.graphColor = graphColor(matrix, numRegs);
+          for(int i=0; i<functVars; i++) {
+            boolean notUsed = true;
+            for(int j=0; j<linesCode; j++) {
+              if(livenessArray[i][j]) {
+                notUsed = false;
+                break;
+              }
+            }
+            if(notUsed) visitor.graphColor[i] = -1;
+          }
+
           for(int i=0; i<visitor.graphColor.length;i++) {
             visitor.maxColor = Integer.max(visitor.graphColor[i], visitor.maxColor);
           }
+          System.err.printf("MAX COLOR: %d\n", visitor.maxColor);
+          /*for(int i=0; i<visitor.graphColor.length;i++) {
+            if(visitor.graphColor[i] != -1)
+              visitor.graphColor[i] = visitor.maxColor-visitor.graphColor[i];
+          }*/
         }
 
         int labelIndex = 0;
@@ -117,8 +124,8 @@ class V2VM extends CommandLineLauncher.TextOutput {
         {
           String funcName = function.ident;
           int inVar = function.params.length<4? 0 : function.params.length-4;
-          int outVar = lvisitor.outVar;//function.stack.out;
-          int localVar = visitor.maxColor+1;//function.stack.local;
+          int outVar = lvisitor.outVar;
+          int localVar = visitor.maxColor+1;
           System.out.printf("func %s [in %d, out %d, local %d]\n", funcName, inVar, outVar, localVar);
           if(!funcName.equals("Main")) {
             visitor.handleParams();
@@ -139,9 +146,12 @@ class V2VM extends CommandLineLauncher.TextOutput {
           
           // print out the instruction
           if(instr.sourcePos.line == i) {
-            instr.accept(visitor);
-            if(instr instanceof VReturn) 
+            if(instr instanceof VReturn) {
+              instr.accept(visitor);
               break;
+            }
+
+            instr.accept(visitor);
             instrIndex++;
             if(instrIndex < function.body.length) {
               instr = function.body[instrIndex];
@@ -205,10 +215,23 @@ class V2VM extends CommandLineLauncher.TextOutput {
       }
     }
 
+    void printLiveness() {
+      System.err.println();
+      for(int i=0; i<livenessArray.length; i++) {
+        System.err.printf("var: %7s", vars[i]);
+        int lines = livenessArray[i].length;
+        for(int j=0; j<lines; j++) {
+          System.err.printf("%s", livenessArray[i][j]? "|" : "_");
+        }
+        System.err.println();
+      }
+    }
+
     void propagateLiveness(int currentLine, int nextLine, String ... args) {
       for(int i=0; i<vars.length; i++) {
         boolean isReferredTo = false;
         for(String a : args) {
+          if(a==null) continue;
           if(vars[i].equals(a)) {
             isReferredTo = true;
             break;
@@ -216,9 +239,9 @@ class V2VM extends CommandLineLauncher.TextOutput {
         }
         if(isReferredTo) continue;
         //TODO: Just in case there's a bug...
-        //System.err.printf("VARIABLE %s\n", vars[i]);
-        if(livenessArray[i][nextLine] == true)
+        if(livenessArray[i][nextLine] == true) {
           setLivenessTrue(i, currentLine);
+        } 
       }
     }
 
@@ -232,13 +255,14 @@ class V2VM extends CommandLineLauncher.TextOutput {
 
       // source
       if(!(src instanceof VLitInt)) {
-        int idx = getID(src.toString());
+        int idx = getID(s_str);
         setLivenessTrue(idx, line);
-        propagateLiveness(line, line+1, d_str);
+        if(!s_str.equals(d_str))
+        propagateLiveness(line, line+1, d_str, s_str);
         return;
       } 
       
-      propagateLiveness(line, line+1, s_str, d_str);
+      propagateLiveness(line, line+1, d_str);
     }
 
     @Override
@@ -250,7 +274,6 @@ class V2VM extends CommandLineLauncher.TextOutput {
       int idx = getID(variable);
 
       setLivenessTrue(idx, line);
-
       propagateLiveness(line, currentBlock.exits[0].start, variable);
       propagateLiveness(line, currentBlock.exits[1].start, variable);
     }
@@ -260,7 +283,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
       VOperand [] args = builtIn.args;
       VVarRef dest = builtIn.dest;
       VBuiltIn.Op op = builtIn.op;
-      String variable = dest==null? null : dest.toString();
+      String varName = dest!=null? dest.toString() : null;
       switch(op.name) {
       case "Add": {
         if(!(args[0] instanceof VLitInt)) {
@@ -274,7 +297,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         }
         String a = args[0] instanceof VLitInt? null : args[0].toString();
         String b = args[1] instanceof VLitInt? null : args[1].toString();
-        propagateLiveness(line, line+1, variable, a, b);
+        propagateLiveness(line, line+1, varName, a, b);
         break;
       }
 
@@ -290,7 +313,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         }
         String a = args[0] instanceof VLitInt? null : args[0].toString();
         String b = args[1] instanceof VLitInt? null : args[1].toString();
-        propagateLiveness(line, line+1, variable, a, b);
+        propagateLiveness(line, line+1, varName, a, b);
         break;
       }
 
@@ -306,7 +329,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         }
         String a = args[0] instanceof VLitInt? null : args[0].toString();
         String b = args[1] instanceof VLitInt? null : args[1].toString();
-        propagateLiveness(line, line+1, variable, a, b);
+        propagateLiveness(line, line+1, varName, a, b);
         break;
       }
 
@@ -323,7 +346,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         }
         String a = args[0] instanceof VLitInt? null : args[0].toString();
         String b = args[1] instanceof VLitInt? null : args[1].toString();
-        propagateLiveness(line, line+1, variable, a, b);
+        propagateLiveness(line, line+1, varName, a, b);
         break;
       }
 
@@ -339,7 +362,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         }
         String a = args[0] instanceof VLitInt? null : args[0].toString();
         String b = args[1] instanceof VLitInt? null : args[1].toString();
-        propagateLiveness(line, line+1, variable, a, b);
+        propagateLiveness(line, line+1, varName, a, b);
         break;
       }
 
@@ -355,7 +378,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         }
         String a = args[0] instanceof VLitInt? null : args[0].toString();
         String b = args[1] instanceof VLitInt? null : args[1].toString();
-        propagateLiveness(line, line+1, variable, a, b);
+        propagateLiveness(line, line+1, varName, a, b);
         break;
       }
 
@@ -365,7 +388,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
           int idx = getID(a);
           if(idx != -1) {
             setLivenessTrue(idx, line);
-            propagateLiveness(line, line+1, variable, a);
+            propagateLiveness(line, line+1, a);
           }
         }
 
@@ -378,8 +401,10 @@ class V2VM extends CommandLineLauncher.TextOutput {
           int idx = getID(a);
           if(idx != -1) { 
             setLivenessTrue(idx, line);
-            propagateLiveness(line, line+1, variable, a);
+            propagateLiveness(line, line+1, varName, a);
           }
+        } else {
+          propagateLiveness(line, line+1, varName);
         }
         break;
       }
@@ -404,18 +429,27 @@ class V2VM extends CommandLineLauncher.TextOutput {
       int min = args.length < 4? args.length : 4;
 
       this.outVar = Integer.max(outVar, args.length<4? 0 : args.length-4);
-
-      for(VOperand a : args) {
-        int idx = getID(a.toString());
-        if(idx != -1) {
-          setLivenessTrue(idx, line);
-        }
-      }
-
-      int idx = getID(addr.toString());
+      int length = args.length;
+      String addrName = addr.toString();
+      int idx = getID(addrName);
       if(idx != -1) {
         setLivenessTrue(idx, line);
+        length = 1+length;
       }
+      String [] function = new String[length];// function args length + addr of function
+      for(int j=0; j<args.length; j++) {
+        String arg = args[j].toString();
+        int id = getID(arg);
+        if(id != -1) {
+          setLivenessTrue(id, line);
+          function[j] = arg;
+        }
+      }
+      if(idx != -1) {
+        int last = length-1;
+        function[last] = addrName;
+      }
+      propagateLiveness(line, line+1, function);
     }
 
     @Override
@@ -428,31 +462,39 @@ class V2VM extends CommandLineLauncher.TextOutput {
     public void visit(Integer line, VMemRead r) throws Exception {
       VVarRef dest = r.dest;
       VMemRef src = r.source;
-      int offset = 0;
-      String s;
       if(src instanceof VMemRef.Global) {
         VMemRef.Global gg = (VMemRef.Global) src;
-        s = gg.base.toString();
-        offset = gg.byteOffset;
-      } else {
-        s = "";
-      }
-      int idx = getID(s);
-      setLivenessTrue(idx, line);
+        String s = gg.base.toString();
+        String d = dest.toString();
+        int idx = getID(s);
+        setLivenessTrue(idx, line);
+        if(!s.equals(d)) {
+          propagateLiveness(line, line+1, s, dest.toString());
+        }
 
+      } else if(src instanceof VMemRef.Stack) {
+        VMemRef.Stack ss = (VMemRef.Stack) src;
+        //System.err.printf("VMEMREAD___%s %d\n", ss.region, ss.index);
+      } 
     }
 
     @Override
     public void visit(Integer line, VMemWrite w) throws Exception {
       VMemRef dest = w.dest;
       VOperand src = w.source;
-      if(src instanceof VLitInt) {
-        return;
-      } else if(src instanceof VLabelRef) {
-        return;
+      if(dest instanceof VMemRef.Global) {
+        VMemRef.Global gg = (VMemRef.Global) dest;
+        String s = gg.base.toString();
+        int idx = getID(s);
+        setLivenessTrue(idx, line);
+      }
+
+      if(src instanceof VLitInt || src instanceof VLabelRef) {
+        propagateLiveness(line, line+1, dest.toString());
       } else {
         int idx = getID(src.toString());
         setLivenessTrue(idx, line);
+        propagateLiveness(line, line+1, src.toString(), dest.toString());
       }
     }
 
@@ -461,7 +503,6 @@ class V2VM extends CommandLineLauncher.TextOutput {
       VOperand value = r.value;
       if(value != null) {
         int idx = getID(value.toString());
-
         if(idx == -1) return;
         setLivenessTrue(idx, line);
       }
@@ -479,15 +520,30 @@ class V2VM extends CommandLineLauncher.TextOutput {
     String mapToRegister(String name) {
       for(int i = 0; i < vars.length; i++) {
         if(name.equals(vars[i])) {
-          //System.out.printf("LENGTH: %d, GLENGTH: %d, i: %d, out: %d\n", vars.length, graphColor.length, i, graphColor[i]);
           int index = graphColor[i];
-          return "$t"+index;
+          if(index == -1)
+            return "$v1";
+          else if(index < 9)
+            return "$t"+index;
+          else {
+            return "$s"+(graphColor[i]-8);
+          }
         }
       }
       return name;
     }
 
     public void handleParams() {
+
+      int maxT = maxColor < 9? maxColor : 8;
+      int maxS = maxColor-9;
+      for(int i=0; i<=maxT; i++) {
+        System.out.printf("  local[%d] = $t%d\n", i, i);
+      }
+      for(int i=0; i<=maxS; i++) {
+        System.out.printf("  local[%d] = $s%d\n", i+8, i);
+      }
+
       int min = params.length < 4? params.length : 4;
   
       for(int i = 0; i < min; i++) {
@@ -501,14 +557,14 @@ class V2VM extends CommandLineLauncher.TextOutput {
       }
     }
 
-
     @Override
     public void visit(VAssign a) throws Exception {
       VVarRef dest = a.dest;
       VOperand src = a.source;
       String d = mapToRegister(dest.toString());
       String s = (src instanceof VLitInt)? src.toString() : mapToRegister(src.toString());
-      System.out.printf("  %s = %s\n", d, s);
+      if(!d.equals(s))
+        System.out.printf("  %s = %s\n", d, s);
     }
 
     @Override
@@ -608,9 +664,6 @@ class V2VM extends CommandLineLauncher.TextOutput {
       int min = args.length < 4? args.length : 4;
       //System.err.printf(" MAX COLORS: %d\n", maxColor);
       // save the registers.
-      for(int i=0; i<=maxColor; i++) {
-        System.out.printf("  local[%d] = $t%d\n", i, i);
-      }
 
       for(int i = 0; i < min; i++) {
         String a = mapToRegister(args[i].toString());
@@ -627,13 +680,8 @@ class V2VM extends CommandLineLauncher.TextOutput {
 
       String d = mapToRegister(dest.toString());
       System.out.printf("  call %s\n", a);
-
-      //load back the registers
-      for(int i=0; i<=maxColor; i++) {
-        System.out.printf("  $t%d = local[%d]\n", i, i);
-      }
-
-      System.out.printf("  %s = $v0\n", d);
+      if(!d.equals("$v0"))
+        System.out.printf("  %s = $v0\n", d);
     }
 
     @Override
@@ -657,7 +705,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         s = "";
       }
       if(offset>0)
-        System.out.printf("  %s = [%s+%s]\n", d, s, offset);
+        System.out.printf("  %s = [%s+%d]\n", d, s, offset);
       else
         System.out.printf("  %s = [%s]\n", d, s);
     }
@@ -688,6 +736,18 @@ class V2VM extends CommandLineLauncher.TextOutput {
         String v = (value instanceof VLitInt)? value.toString() : mapToRegister(value.toString());
         System.out.printf("  $v0 = %s\n", v);
       }
+
+      int maxT = maxColor < 9? maxColor : 8;
+      int maxS = maxColor-9;
+      //load back the registers
+      for(int i=0; i<=maxT; i++) {
+        System.out.printf("  $t%d = local[%d]\n", i, i);
+      }
+      for(int i=0; i<=maxS; i++) {
+        System.out.printf("  $s%d = local[%d]\n", i, i+8);
+      }
+
+
       System.out.printf("  ret\n\n");
     }
   }
