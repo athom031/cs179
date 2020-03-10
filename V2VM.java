@@ -65,6 +65,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         visitor.params = function.params;
         
         {
+          System.err.println(function.ident+ "( :D  ):");
           lvisitor.printLiveness();
           boolean [][] livenessArray = lvisitor.livenessArray;
           int functVars = function.vars.length;
@@ -90,8 +91,10 @@ class V2VM extends CommandLineLauncher.TextOutput {
                 break;
               }
             }
+            // mark it NOT used.
             if(notUsed) visitor.graphColor[i] = -1;
           }
+          // compute max color
           visitor.maxColor = -100;
           for(int i=0; i<visitor.graphColor.length;i++) {
             visitor.maxColor = Integer.max(visitor.graphColor[i], visitor.maxColor);
@@ -241,7 +244,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         int idx = getID(s_str);
         setLivenessTrue(idx, line);
         if(!s_str.equals(d_str))
-        propagateLiveness(line, line+1, d_str, s_str);
+          propagateLiveness(line, line+1, d_str, s_str);
         return;
       } 
       
@@ -257,13 +260,16 @@ class V2VM extends CommandLineLauncher.TextOutput {
       int idx = getID(variable);
 
       setLivenessTrue(idx, line);
-      //System.err.println(currentBlock.exits+" "+currentBlock.exits.length);
       propagateLiveness(line, line+1, variable);
       if(currentBlock.exits != null) {
         for(BasicBlock exit : currentBlock.exits) {
           if(exit != null)
             propagateLiveness(line, exit.start, variable);
+          else
+            System.err.println("WHY__________PROPAGEATE????");
         }
+      } else {
+        System.err.println("WHY????");
       }
     }
 

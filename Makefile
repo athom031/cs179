@@ -1,4 +1,4 @@
-FILE=LinkedList
+FILE=TreeVisitor
 
 vaporm:
 	javac -g V2VM.java
