@@ -196,19 +196,19 @@ class V2VM extends CommandLineLauncher.TextOutput {
     }
 
     void setLivenessTrue(int i, int j) {
-      if(livenessArray[i][j] == false) {
-        livenessArray[i][j] = true;
+      if(this.livenessArray[i][j] == false) {
+        this.livenessArray[i][j] = true;
         loopAgain = true;
       }
     }
 
     void printLiveness() {
       System.err.println();
-      for(int i=0; i<livenessArray.length; i++) {
+      for(int i=0; i<this.livenessArray.length; i++) {
         System.err.printf("%15s:  ", vars[i]);
-        int lines = livenessArray[i].length;
+        int lines = this.livenessArray[i].length;
         for(int j=0; j<lines; j++) {
-          System.err.printf("%s", livenessArray[i][j]? "|" : "_");
+          System.err.printf("%s", this.livenessArray[i][j]? "|" : "_");
         }
         System.err.println();
       }
@@ -242,9 +242,10 @@ class V2VM extends CommandLineLauncher.TextOutput {
       // source
       if(!(src instanceof VLitInt)) {
         int idx = getID(s_str);
-        setLivenessTrue(idx, line);
-        if(!s_str.equals(d_str))
-          propagateLiveness(line, line+1, d_str, s_str);
+        if(!s_str.equals(d_str)) {
+          setLivenessTrue(idx, line);
+          propagateLiveness(line, line+1, s_str);
+        }
         return;
       } 
       
@@ -260,7 +261,9 @@ class V2VM extends CommandLineLauncher.TextOutput {
       int idx = getID(variable);
 
       setLivenessTrue(idx, line);
-      propagateLiveness(line, line+1, variable);
+      //System.err.printf(" VISIT %d, %d\n", currentBlock.exits[0].start, currentBlock.exits[1].start);
+      //propagateLiveness(line, currentBlock.exits[0].start, variable);
+      //propagateLiveness(line, currentBlock.exits[1].start, variable);
       if(currentBlock.exits != null) {
         for(BasicBlock exit : currentBlock.exits) {
           if(exit != null)
@@ -486,18 +489,26 @@ class V2VM extends CommandLineLauncher.TextOutput {
         VMemRef.Global gg = (VMemRef.Global) dest;
         String s = gg.base.toString();
         int idx = getID(s);
+        System.err.println("SLJ   " + s);
+        System.err.printf("LIVENESS: %d, %s := %s\n", idx, line, livenessArray[idx][line]);
         setLivenessTrue(idx, line);
+        System.err.printf("LIVENESS: %d, %s := %s\n", idx, line, livenessArray[idx][line]);
+
+        if(src instanceof VLitInt || src instanceof VLabelRef) {
+          propagateLiveness(line, line+1, dest.toString());
+        } else {
+          idx = getID(src.toString());
+          setLivenessTrue(idx, line);
+          propagateLiveness(line, line+1, src.toString(), s);
+        }
+
+
+
+
       } else if(dest instanceof VMemRef.Stack) {
-
+        //System.err.println("SLJKDFDLKSDLKFJSDFJLKDSFLKJSDFLJKSDFLKJ");
       }
 
-      if(src instanceof VLitInt || src instanceof VLabelRef) {
-        propagateLiveness(line, line+1, dest.toString());
-      } else {
-        int idx = getID(src.toString());
-        setLivenessTrue(idx, line);
-        propagateLiveness(line, line+1, src.toString(), dest.toString());
-      }
     }
 
     @Override

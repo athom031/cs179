@@ -1,8 +1,10 @@
+
 const vmt_LS
   :LS.Start
   :LS.Print
   :LS.Search
   :LS.Init
+
 
 func Main()
   t.0 = HeapAllocZ(12)

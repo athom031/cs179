@@ -1,5 +1,7 @@
+
 const vmt_Fac
   :Fac.ComputeFac
+
 
 func Main()
   t.0 = HeapAllocZ(4)
