@@ -33,7 +33,6 @@ class V2VM extends CommandLineLauncher.TextOutput {
       for(VFunction function : p.functions) {
 
         BasicBlock [] basicBlocks = BasicBlock.generateBlocks(function.body, function.labels);
-
         {
           // initialize liveness visitor
           int functVars = function.vars.length;
@@ -66,7 +65,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         
         {
           //System.err.println(function.ident+ "( :D  ):");
-          //lvisitor.printLiveness();
+          lvisitor.printLiveness();
           boolean [][] livenessArray = lvisitor.livenessArray;
           int functVars = function.vars.length;
           int linesCode = function.body.length;
@@ -404,10 +403,20 @@ class V2VM extends CommandLineLauncher.TextOutput {
           int idx = getID(a);
           if(idx != -1) { 
             setLivenessTrue(idx, line);
-            propagateLiveness(line, line+1, varName, a);
+            idx = getID(varName);
+            setLivenessTrue(idx, line);
+            propagateLiveness(line, line+1, a);
           }
         } else {
-          propagateLiveness(line, line+1, varName);
+          int idx = getID(varName);
+          //HACK.
+          if(livenessArray[idx][line]==false)
+          for(int i=line; i<livenessArray[idx].length; i++) {
+            livenessArray[idx][i] = true;
+          }
+
+          //setLivenessTrue(idx, line);
+          //propagateLiveness(line, line+1, varName);
         }
         break;
       }
@@ -474,10 +483,16 @@ class V2VM extends CommandLineLauncher.TextOutput {
         String d = dest.toString();
         int idx = getID(s);
         setLivenessTrue(idx, line);
-        propagateLiveness(line, line+1, s, dest.toString());
+        //idx = getID(d);
+        //setLivenessTrue(idx, line);
+        if(s.equals(d))
+          propagateLiveness(line, line+1, s, d);
+        else
+          propagateLiveness(line, line+1, s, d);
 
       } else if(src instanceof VMemRef.Stack) {
         VMemRef.Stack ss = (VMemRef.Stack) src;
+        //System.err.println("HOLA!!!!!!!!!!!!!!!!!!!!");
       } 
     }
 
@@ -501,9 +516,6 @@ class V2VM extends CommandLineLauncher.TextOutput {
           setLivenessTrue(idx, line);
           propagateLiveness(line, line+1, src.toString(), s);
         }
-
-
-
 
       } else if(dest instanceof VMemRef.Stack) {
         //System.err.println("SLJKDFDLKSDLKFJSDFJLKDSFLKJSDFLJKSDFLKJ");
