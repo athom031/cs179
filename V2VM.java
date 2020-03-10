@@ -92,7 +92,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
             }
             if(notUsed) visitor.graphColor[i] = -1;
           }
-
+          visitor.maxColor = -100;
           for(int i=0; i<visitor.graphColor.length;i++) {
             visitor.maxColor = Integer.max(visitor.graphColor[i], visitor.maxColor);
           }
@@ -537,7 +537,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         System.out.printf("  local[%d] = $t%d\n", i, i);
       }
       for(int i=0; i<=maxS; i++) {
-        System.out.printf("  local[%d] = $s%d\n", i+8, i);
+        System.out.printf("  local[%d] = $s%d\n", i+9, i);
       }
 
       int min = params.length < 4? params.length : 4;
@@ -736,10 +736,8 @@ class V2VM extends CommandLineLauncher.TextOutput {
         System.out.printf("  $t%d = local[%d]\n", i, i);
       }
       for(int i=0; i<=maxS; i++) {
-        System.out.printf("  $s%d = local[%d]\n", i, i+8);
+        System.out.printf("  $s%d = local[%d]\n", i, i+9);
       }
-
-
       System.out.printf("  ret\n\n");
     }
   }
