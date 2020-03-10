@@ -64,8 +64,6 @@ class V2VM extends CommandLineLauncher.TextOutput {
         visitor.params = function.params;
         
         {
-          //System.err.println(function.ident+ "( :D  ):");
-          lvisitor.printLiveness();
           boolean [][] livenessArray = lvisitor.livenessArray;
           int functVars = function.vars.length;
           int linesCode = function.body.length;
@@ -492,7 +490,6 @@ class V2VM extends CommandLineLauncher.TextOutput {
 
       } else if(src instanceof VMemRef.Stack) {
         VMemRef.Stack ss = (VMemRef.Stack) src;
-        //System.err.println("HOLA!!!!!!!!!!!!!!!!!!!!");
       } 
     }
 
@@ -504,10 +501,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
         VMemRef.Global gg = (VMemRef.Global) dest;
         String s = gg.base.toString();
         int idx = getID(s);
-        //System.err.println("SLJ   " + s);
-        //System.err.printf("LIVENESS: %d, %s := %s\n", idx, line, livenessArray[idx][line]);
         setLivenessTrue(idx, line);
-        ///System.err.printf("LIVENESS: %d, %s := %s\n", idx, line, livenessArray[idx][line]);
 
         if(src instanceof VLitInt || src instanceof VLabelRef) {
           propagateLiveness(line, line+1, dest.toString());
@@ -518,7 +512,6 @@ class V2VM extends CommandLineLauncher.TextOutput {
         }
 
       } else if(dest instanceof VMemRef.Stack) {
-        //System.err.println("SLJKDFDLKSDLKFJSDFJLKDSFLKJSDFLJKSDFLKJ");
       }
 
     }
