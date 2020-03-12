@@ -92,7 +92,7 @@ class V2VM extends CommandLineLauncher.TextOutput {
             if(notUsed) visitor.graphColor[i] = -1;
           }
           // compute max color
-          visitor.maxColor = -100;
+          visitor.maxColor = 0;
           for(int i=0; i<visitor.graphColor.length;i++) {
             visitor.maxColor = Integer.max(visitor.graphColor[i], visitor.maxColor);
           }

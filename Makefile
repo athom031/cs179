@@ -1,9 +1,7 @@
-FILE=TreeVisitor
+FILE=LinkedList
 
 vaporm:
-	javac -g V2VM.java
-	java V2VM < Phase3Tests/$(FILE).vapor > $(FILE).vaporm
-	java -jar vapor.jar run -mips $(FILE).vaporm
+	javac VM2M.java
 
 clean:
 	rm *.class
