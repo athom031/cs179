@@ -26,6 +26,7 @@ public class VM2M extends CommandLineLauncher.TextOutput {
       for(VDataSegment dataSegment : program.dataSegments) {
         System.out.printf("%s:\n", dataSegment.ident);
         for(VOperand.Static value : dataSegment.values) {
+
           String ident = value.toString();
           System.out.printf("  %s\n", ident);
         }
@@ -38,6 +39,7 @@ public class VM2M extends CommandLineLauncher.TextOutput {
       System.out.println("  syscall");
 
       // go through each function.
+      int labelIndex = 0;
       for(VFunction function : program.functions) {
         System.out.printf("%s:\n", function.ident);
 
@@ -49,6 +51,17 @@ public class VM2M extends CommandLineLauncher.TextOutput {
         System.out.println("  sw $ra -4($fp)");
 
         for(VInstr instruction : function.body) {
+          // print out label if there's a label
+          if(function.labels != null && labelIndex < function.labels.length) {
+            VCodeLabel label = function.labels[labelIndex];
+            if(label.sourcePos.line <= instruction.sourcePos.line) {
+              String labelName = label.ident;
+              System.out.printf("%s:\n", labelName);
+              labelIndex++;
+            }
+          }
+
+          // print out instruction
           instruction.accept(visitor);
         }
 
@@ -56,6 +69,7 @@ public class VM2M extends CommandLineLauncher.TextOutput {
         System.out.println("  lw $fp -8($fp)");
         System.out.println("  addu $sp $sp 8");
         System.out.println("  jr $ra");
+        System.out.println();
       }
 
       System.out.println("_print:");
@@ -106,7 +120,13 @@ public class VM2M extends CommandLineLauncher.TextOutput {
     public void visit(VAssign vassign) throws Exception {
       VVarRef dest = vassign.dest;
       VOperand src = vassign.source;
-
+      String destString = dest.toString();
+      String srcString = src.toString();
+      if(src instanceof VLitInt) {
+        System.out.printf("  li %s, %s\n", destString, srcString);
+      } else {
+        System.out.printf("  move %s, %s\n", srcString, destString);
+      }
     }
 
     @Override
@@ -114,6 +134,13 @@ public class VM2M extends CommandLineLauncher.TextOutput {
       boolean positive = vbranch.positive;
       VLabelRef<VCodeLabel> target = vbranch.target;
       VOperand value = vbranch.value;
+      String valName = value.toString();
+      String labelName = target.toString().substring(1);
+      if(positive) {
+        System.out.printf("  bnez %s, %s\n", valName, labelName);
+      } else {
+        System.out.printf("  beqz %s, %s\n", valName, labelName);
+      }
     }
 
     @Override
@@ -121,6 +148,46 @@ public class VM2M extends CommandLineLauncher.TextOutput {
       VOperand [] args = vbuiltin.args;
       VVarRef dest = vbuiltin.dest;
       VBuiltIn.Op op = vbuiltin.op;
+
+      switch(op.name) {
+      case "Add": {
+        break;
+      }
+
+      case "Sub": {
+        break;
+      }
+
+      case "MulS": {
+        break;
+      }
+
+      case "Eq": {
+        break;
+      }
+
+      case "Lt": {
+        break;
+      }
+
+      case "PrintIntS": {
+        break;
+      }
+
+      case "HeapAllocZ": {
+        break;
+      }
+
+      case "Error": {
+        break;
+      }
+
+      default: {
+        assert(false);
+        break;
+      }
+
+      }
     }
 
     @Override
@@ -133,6 +200,8 @@ public class VM2M extends CommandLineLauncher.TextOutput {
     @Override
     public void visit(VGoto vgoto) throws Exception {
       VAddr<VCodeLabel> target = vgoto.target;
+      String labelName = target.toString().substring(1);
+      System.out.printf("  j %s\n", labelName);
     }
 
     @Override
