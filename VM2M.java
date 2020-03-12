@@ -9,7 +9,6 @@ import java.io.*;
 
 public class VM2M extends CommandLineLauncher.TextOutput {
 
-
   public static void main(String [] args) {
     CommandLineLauncher.run(new VM2M(), args);
   }
@@ -18,6 +17,47 @@ public class VM2M extends CommandLineLauncher.TextOutput {
   public void run(PrintWriter out, InputStream in, PrintWriter err, String [] args) throws Exit {
     try {
       VaporProgram program = VM2M.parseVapor(in, System.err);
+      Visitor visitor = new Visitor();
+
+      // setup
+      System.out.println(".data");
+      System.out.println(".text");
+      System.out.println("  jal Main");
+      System.out.println("  li $v0 10");
+      System.out.println("  syscall");
+
+      // Main
+      System.out.println("Main:");
+      System.out.println("  sw $fp -8($sp)");
+      System.out.println("  move $fp $sp");
+      System.out.println("  subu $sp $sp 8");
+      System.out.println("  sw $ra -4($fp)");
+      System.out.println("  li $a0, 50");
+      System.out.println("  jal _print");
+      System.out.println("  lw $ra -4($fp)");
+      System.out.println("  lw $fp -8($fp)");
+      System.out.println("  addu $sp $sp 8");
+      System.out.println("  jr $ra");
+
+      System.out.println("_print:");
+      System.out.println("  li $v0 1");
+      System.out.println("  syscall");
+      System.out.println("  la $a0 _newline");
+      System.out.println("  li $v0 4");
+      System.out.println("  syscall");
+      System.out.println("  jr $ra");
+      System.out.println("_error:");
+      System.out.println("  li $v0 4");
+      System.out.println("  syscall");
+      System.out.println("_heapAlloc:");
+      System.out.println("  li $v0 9");
+      System.out.println("  syscall");
+      System.out.println("  jr $ra");
+      System.out.println(".data");
+      System.out.println(".align 0");
+      System.out.println("  _newline: .asciiz \"\\n\"");
+      System.out.println("  _str0: .asciiz \"null pointer\\n\"");
+      
     } catch(IOException e) {
       e.printStackTrace();
     }
