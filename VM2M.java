@@ -21,23 +21,42 @@ public class VM2M extends CommandLineLauncher.TextOutput {
 
       // setup
       System.out.println(".data");
+
+      // virtual function table
+      for(VDataSegment dataSegment : program.dataSegments) {
+        System.out.printf("%s:\n", dataSegment.ident);
+        for(VOperand.Static value : dataSegment.values) {
+          String ident = value.toString();
+          System.out.printf("  %s\n", ident);
+        }
+      }
+
+
       System.out.println(".text");
       System.out.println("  jal Main");
       System.out.println("  li $v0 10");
       System.out.println("  syscall");
 
-      // Main
-      System.out.println("Main:");
-      System.out.println("  sw $fp -8($sp)");
-      System.out.println("  move $fp $sp");
-      System.out.println("  subu $sp $sp 8");
-      System.out.println("  sw $ra -4($fp)");
-      System.out.println("  li $a0, 50");
-      System.out.println("  jal _print");
-      System.out.println("  lw $ra -4($fp)");
-      System.out.println("  lw $fp -8($fp)");
-      System.out.println("  addu $sp $sp 8");
-      System.out.println("  jr $ra");
+      // go through each function.
+      for(VFunction function : program.functions) {
+        System.out.printf("%s:\n", function.ident);
+
+        // TODO: eventually make the stack correct.
+        // but for now, just get it semi-functional
+        System.out.println("  sw $fp -8($sp)");
+        System.out.println("  move $fp $sp");
+        System.out.println("  subu $sp $sp 8");
+        System.out.println("  sw $ra -4($fp)");
+
+        for(VInstr instruction : function.body) {
+          instruction.accept(visitor);
+        }
+
+        System.out.println("  lw $ra -4($fp)");
+        System.out.println("  lw $fp -8($fp)");
+        System.out.println("  addu $sp $sp 8");
+        System.out.println("  jr $ra");
+      }
 
       System.out.println("_print:");
       System.out.println("  li $v0 1");
@@ -58,7 +77,7 @@ public class VM2M extends CommandLineLauncher.TextOutput {
       System.out.println("  _newline: .asciiz \"\\n\"");
       System.out.println("  _str0: .asciiz \"null pointer\\n\"");
       
-    } catch(IOException e) {
+    } catch(Exception e) {
       e.printStackTrace();
     }
   }
@@ -87,6 +106,7 @@ public class VM2M extends CommandLineLauncher.TextOutput {
     public void visit(VAssign vassign) throws Exception {
       VVarRef dest = vassign.dest;
       VOperand src = vassign.source;
+
     }
 
     @Override
