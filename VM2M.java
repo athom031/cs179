@@ -11,7 +11,7 @@ public class VM2M extends CommandLineLauncher.TextOutput {
 
 
   public static void main(String [] args) {
-    CommandLineLauncher.run(new V2VM(), args);
+    CommandLineLauncher.run(new VM2M(), args);
   }
 
   @Override
@@ -41,7 +41,57 @@ public class VM2M extends CommandLineLauncher.TextOutput {
     }
   }
 
+  class Visitor extends VInstr.Visitor<Exception> {
 
+    @Override
+    public void visit(VAssign vassign) throws Exception {
+      VVarRef dest = vassign.dest;
+      VOperand src = vassign.source;
+    }
 
+    @Override
+    public void visit(VBranch vbranch) throws Exception {
+      boolean positive = vbranch.positive;
+      VLabelRef<VCodeLabel> target = vbranch.target;
+      VOperand value = vbranch.value;
+    }
+
+    @Override
+    public void visit(VBuiltIn vbuiltin) throws Exception {
+      VOperand [] args = vbuiltin.args;
+      VVarRef dest = vbuiltin.dest;
+      VBuiltIn.Op op = vbuiltin.op;
+    }
+
+    @Override
+    public void visit(VCall vcall) throws Exception {
+      VAddr<VFunction> addr = vcall.addr;
+      VOperand [] args = vcall.args;
+      VVarRef.Local dest = vcall.dest;
+    }
+
+    @Override
+    public void visit(VGoto vgoto) throws Exception {
+      VAddr<VCodeLabel> target = vgoto.target;
+    }
+
+    @Override
+    public void visit(VMemRead vmemread) throws Exception {
+      VVarRef dest = vmemread.dest;
+      VMemRef src = vmemread.source;
+    }
+
+    @Override
+    public void visit(VMemWrite vmemwrite) throws Exception {
+      VMemRef dest = vmemwrite.dest;
+      VOperand src = vmemwrite.source;
+    }
+
+    @Override
+    public void visit(VReturn vreturn) throws Exception {
+      VOperand value = vreturn.value;
+    }
+
+  }
 
 }
