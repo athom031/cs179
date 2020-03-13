@@ -373,7 +373,7 @@ public class VM2M extends CommandLineLauncher.TextOutput {
         VMemRef.Global g = (VMemRef.Global) dest;
         String destString = g.base.toString();
         if(src instanceof VLitInt) {
-          int offset = g.byteOffset * 4;
+          int offset = g.byteOffset;// * 4;
           String srcString = src.toString();
           System.out.printf("  li $t9 %s\n", srcString);
           System.out.printf("  sw $t9 %d(%s)\n", offset, destString);
