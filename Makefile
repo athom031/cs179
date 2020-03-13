@@ -1,4 +1,4 @@
-FILE=BubbleSort
+FILE=LinkedList
 
 vaporm:
 	javac -g VM2M.java

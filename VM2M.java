@@ -130,8 +130,9 @@ public class VM2M extends CommandLineLauncher.TextOutput {
       VOperand src = vassign.source;
       String destString = dest.toString();
       if(src instanceof VLitInt) {
-       String srcString = src.toString();
-        System.out.printf("  li %s %s\n", destString, srcString);
+        VLitInt number = (VLitInt) src;
+        int value = number.value;
+        System.out.printf("  li %s %d\n", destString, value);
       } else if(src instanceof VOperand.Static) {
         String srcString = src.toString().substring(1);
         System.out.printf("  la %s %s\n", destString, srcString);
@@ -186,8 +187,8 @@ public class VM2M extends CommandLineLauncher.TextOutput {
         } else if(args[0] instanceof VLitInt && args[1] instanceof VLitInt) {
           VLitInt intA = (VLitInt) args[0];
           VLitInt intB = (VLitInt) args[1];
-          int a = intB.value;
-          int b = intA.value;
+          int a = intA.value;
+          int b = intB.value;
           int sub = a-b;
           String diff = dest.toString();
           System.out.printf("  li %s %d\n", diff, sub);
