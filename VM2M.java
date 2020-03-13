@@ -56,10 +56,15 @@ public class VM2M extends CommandLineLauncher.TextOutput {
           // print out label if there's a label
           if(function.labels != null && labelIndex < function.labels.length) {
             VCodeLabel label = function.labels[labelIndex];
-            if(label.sourcePos.line <= instruction.sourcePos.line) {
+            while(label.sourcePos.line <= instruction.sourcePos.line) {
               String labelName = label.ident;
               System.out.printf("%s:\n", labelName);
               labelIndex++;
+              if(labelIndex < function.labels.length) {
+                label = function.labels[labelIndex];
+              } else {
+                break;
+              }
             }
           }
 
@@ -340,7 +345,7 @@ public class VM2M extends CommandLineLauncher.TextOutput {
         int index = s.index * 4;
         switch(region) {
         case In:
-          System.err.println("VMEMREAD IN");
+          //System.err.println("VMEMREAD IN");
           //System.out.println("VMEMREAD IN");
           System.out.printf("  lw %s %d($fp)\n", destString, index);
           break;
@@ -364,18 +369,22 @@ public class VM2M extends CommandLineLauncher.TextOutput {
       if(dest instanceof VMemRef.Global) {
         VMemRef.Global g = (VMemRef.Global) dest;
         String destString = g.base.toString();
-        int offset = g.byteOffset * 4;
         if(src instanceof VLitInt) {
+          int offset = g.byteOffset * 4;
           String srcString = src.toString();
           System.out.printf("  li $t9 %s\n", srcString);
           System.out.printf("  sw $t9 %d(%s)\n", offset, destString);
         } else if(src instanceof VVarRef) {
-
+          int offset = g.byteOffset;
+          String srcString = src.toString();
+          System.out.printf("  sw %s %d(%s)\n", srcString, offset, destString);
         } else if(src instanceof VOperand.Static) {
+          int offset = g.byteOffset * 4;
           String srcString = src.toString().substring(1);
           System.out.printf("  la $t9 %s\n", srcString);
           System.out.printf("  sw $t9 %d(%s)\n", offset, destString);
         } else {
+          int offset = g.byteOffset * 4;
           String srcString = src.toString();//.substring(1);
           System.out.printf("  la $t9 %s\n", srcString);
           System.out.printf("  sw %s %d(%s)\n", srcString, offset, destString);
@@ -390,10 +399,11 @@ public class VM2M extends CommandLineLauncher.TextOutput {
         switch(region) {
         case In:
           System.err.println("VMEMWRITE IN");
-          System.out.println("VMEMWRITE OUT");
+          System.out.println("VMEMWRITE IN");
+          
           break;
         case Out:
-          System.err.println("VMEMWRITE OUT");
+          //System.err.println("VMEMWRITE OUT");
           if(src instanceof VLitInt) {
             System.out.printf("  li $t9 %s\n", srcString);
             System.out.printf("  sw $t9 %d($sp)\n", index);
