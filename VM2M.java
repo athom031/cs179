@@ -43,7 +43,6 @@ public class VM2M extends CommandLineLauncher.TextOutput {
         System.out.printf("%s:\n", function.ident);
         int local = Integer.max(function.stack.local, function.stack.out);
         visitor.local = local;
-        System.err.println("local: "+local);
 
         // TODO: eventually make the stack correct.
         // but for now, just get it semi-functional
@@ -118,6 +117,8 @@ public class VM2M extends CommandLineLauncher.TextOutput {
 
   class Visitor extends VInstr.Visitor<Exception> {
 
+    int local;
+
     @Override
     public void visit(VAssign vassign) throws Exception {
       VVarRef dest = vassign.dest;
@@ -157,16 +158,15 @@ public class VM2M extends CommandLineLauncher.TextOutput {
 
       switch(op.name) {
       case "Add": {
-        assert(!(args[0] instanceof VLitInt));
         String regName1 = args[0].toString();
         if(args[1] instanceof VLitInt) {
           String litNum = args[1].toString();
           String sumReg = dest.toString();
-          System.out.printf("  addi %s %s %s\n", sumReg, regName1, litNum);
+          System.out.printf("  addu %s %s %s\n", sumReg, regName1, litNum);
         } else {
           String regName2 = args[1].toString();
           String sumReg = dest.toString();
-          System.out.printf("  add %s %s %s\n", sumReg, regName1, regName2);
+          System.out.printf("  addu %s %s %s\n", sumReg, regName1, regName2);
         }
         break;
       }
@@ -183,13 +183,14 @@ public class VM2M extends CommandLineLauncher.TextOutput {
           VLitInt intB = (VLitInt) args[1];
           int a = intB.value;
           int b = intA.value;
+          int sub = a-b;
           String diff = dest.toString();
-          System.out.printf("  li %s %d\n", diff, a-b);
+          System.out.printf("  li %s %d\n", diff, sub);
         } else {
           String regName1 = args[0].toString();
           String regName2 = args[1].toString();
           String diff = dest.toString();
-          System.out.printf("  sub %s %s %s\n", diff, regName1, regName2);
+          System.out.printf("  subu %s %s %s\n", diff, regName1, regName2);
         }
         break;
       }
@@ -230,11 +231,10 @@ public class VM2M extends CommandLineLauncher.TextOutput {
         String regName1 = args[0].toString();
         String regName2 = args[1].toString();
         String output   = dest.toString();
-
         if(args[1] instanceof VLitInt && !(args[0] instanceof VLitInt)) {
-          System.out.printf("  slti %s %s %s\n", output, regName1, regName2);
+          System.out.printf("  sltu %s %s %s\n", output, regName1, regName2);
         } else if(args[0] instanceof VLitInt) {
-          System.out.printf("  slti %s %s %s\n", output, regName2, regName1);
+          System.out.printf("  sltu %s %s %s\n", output, regName2, regName1);
         } else {
           System.out.printf("  sltu %s %s %s\n", output, regName1, regName2);
         }
@@ -256,10 +256,12 @@ public class VM2M extends CommandLineLauncher.TextOutput {
 
       case "PrintIntS": {
         String a = args[0].toString();
-        if(args[0] instanceof VLitInt)
+        if(args[0] instanceof VLitInt) {
           System.out.printf("  li $a0 %s\n", a);
-        else
+        } else {
           System.out.printf("  move $a0 %s\n", a);
+        }
+
         System.out.println("  jal _print");
         break;
       }
@@ -362,7 +364,7 @@ public class VM2M extends CommandLineLauncher.TextOutput {
       if(dest instanceof VMemRef.Global) {
         VMemRef.Global g = (VMemRef.Global) dest;
         String destString = g.base.toString();
-        int offset = g.byteOffset;
+        int offset = g.byteOffset * 4;
         if(src instanceof VLitInt) {
           String srcString = src.toString();
           System.out.printf("  li $t9 %s\n", srcString);
@@ -374,7 +376,7 @@ public class VM2M extends CommandLineLauncher.TextOutput {
           System.out.printf("  la $t9 %s\n", srcString);
           System.out.printf("  sw $t9 %d(%s)\n", offset, destString);
         } else {
-          String srcString = src.toString().substring(1);
+          String srcString = src.toString();//.substring(1);
           System.out.printf("  la $t9 %s\n", srcString);
           System.out.printf("  sw %s %d(%s)\n", srcString, offset, destString);
         }
@@ -407,9 +409,6 @@ public class VM2M extends CommandLineLauncher.TextOutput {
         assert(false);
       }
     }
-
-
-    int local;
 
     @Override
     public void visit(VReturn vreturn) throws Exception {
