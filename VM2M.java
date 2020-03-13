@@ -39,7 +39,6 @@ public class VM2M extends CommandLineLauncher.TextOutput {
       System.out.println("  syscall");
 
       // go through each function.
-      int labelIndex = 0;
       for(VFunction function : program.functions) {
         System.out.printf("%s:\n", function.ident);
 
@@ -50,6 +49,7 @@ public class VM2M extends CommandLineLauncher.TextOutput {
         System.out.println("  subu $sp $sp 8");
         System.out.println("  sw $ra -4($fp)");
 
+        int labelIndex = 0;
         for(VInstr instruction : function.body) {
           // print out label if there's a label
           if(function.labels != null && labelIndex < function.labels.length) {
@@ -123,9 +123,9 @@ public class VM2M extends CommandLineLauncher.TextOutput {
       String destString = dest.toString();
       String srcString = src.toString();
       if(src instanceof VLitInt) {
-        System.out.printf("  li %s, %s\n", destString, srcString);
+        System.out.printf("  li %s %s\n", destString, srcString);
       } else {
-        System.out.printf("  move %s, %s\n", srcString, destString);
+        System.out.printf("  move %s %s\n", destString, srcString);
       }
     }
 
@@ -137,9 +137,9 @@ public class VM2M extends CommandLineLauncher.TextOutput {
       String valName = value.toString();
       String labelName = target.toString().substring(1);
       if(positive) {
-        System.out.printf("  bnez %s, %s\n", valName, labelName);
+        System.out.printf("  bnez %s %s\n", valName, labelName);
       } else {
-        System.out.printf("  beqz %s, %s\n", valName, labelName);
+        System.out.printf("  beqz %s %s\n", valName, labelName);
       }
     }
 
@@ -156,22 +156,28 @@ public class VM2M extends CommandLineLauncher.TextOutput {
         if(args[1] instanceof VLitInt) {
           String litNum = args[1].toString();
           String sumReg = dest.toString();
-          System.out.printf("  addi %s, %s, %s\n", sumReg, regName1, litNum);
+          System.out.printf("  addi %s %s %s\n", sumReg, regName1, litNum);
         } else {
           String regName2 = args[1].toString();
           String sumReg = dest.toString();
-          System.out.printf("  add %s, %s, %s\n", sumReg, regName1, regName2);
+          System.out.printf("  add %s %s %s\n", sumReg, regName1, regName2);
         }
         break;
       }
 
       case "Sub": {
-        // TODO: args[0] can be VLitInt as well as args[1]
-        assert(!(args[0] instanceof VLitInt) || !(args[1] instanceof VLitInt));
-        String regName1 = args[0].toString();
-        String regName2 = args[1].toString();
-        String diff = dest.toString();
-        System.out.printf("  sub %s, %s, %s\n", diff, regName1, regName2);
+        if(args[0] instanceof VLitInt && !(args[1] instanceof VLitInt)) {
+          String regName1 = args[0].toString();
+          String regName2 = args[1].toString();
+          String diff = dest.toString();
+          System.out.printf("  li %s %s\n", diff, regName1);
+          System.out.printf("  subu %s %s %s\n", diff, diff, regName1);
+        } else {
+          String regName1 = args[0].toString();
+          String regName2 = args[1].toString();
+          String diff = dest.toString();
+          System.out.printf("  sub %s %s %s\n", diff, regName1, regName2);
+        }
         break;
       }
 
@@ -180,7 +186,7 @@ public class VM2M extends CommandLineLauncher.TextOutput {
         String regName1 = args[0].toString();
         String regName2 = args[1].toString();
         String product = dest.toString();
-        System.out.printf("  mul %s, %s, %s\n", product, regName1, regName2);
+        System.out.printf("  mul %s %s %s\n", product, regName1, regName2);
         break;
       }
 
@@ -188,8 +194,8 @@ public class VM2M extends CommandLineLauncher.TextOutput {
         String regName1 = args[0].toString();
         String regName2 = args[1].toString();
         String output   = dest.toString();
-        System.out.printf("  xor %s, %s, %s\n", output, regName1, regName2);
-        System.out.printf("  xor %s, %s, 1\n",  output, output);
+        System.out.printf("  xor %s %s %s\n", output, regName1, regName2);
+        System.out.printf("  xor %s %s 1\n",  output, output);
         break;
       }
 
@@ -199,9 +205,9 @@ public class VM2M extends CommandLineLauncher.TextOutput {
         String output   = dest.toString();
 
         if(args[1] instanceof VLitInt) {
-          System.out.printf("  slti %s, %s, %s\n", output, regName1, regName2);
+          System.out.printf("  slti %s %s %s\n", output, regName1, regName2);
         } else {
-          System.out.printf("  slt %s, %s, %s\n", output, regName1, regName2);
+          System.out.printf("  slt %s %s %s\n", output, regName1, regName2);
         }
         break;
       }
@@ -209,9 +215,9 @@ public class VM2M extends CommandLineLauncher.TextOutput {
       case "PrintIntS": {
         String a = args[0].toString();
         if(args[0] instanceof VLitInt)
-          System.out.printf("  li $a0, %s\n", a);
+          System.out.printf("  li $a0 %s\n", a);
         else
-          System.out.printf("  move $a0, %s\n", a);
+          System.out.printf("  move $a0 %s\n", a);
         System.out.println("  jal _print");
         break;
       }
@@ -219,9 +225,9 @@ public class VM2M extends CommandLineLauncher.TextOutput {
       case "HeapAllocZ": {
         String a = args[0].toString();
         if(args[0] instanceof VLitInt)
-          System.out.printf("  li $a0, %s\n", a);
+          System.out.printf("  li $a0 %s\n", a);
         else
-          System.out.printf("  move $a0, %s\n", a);
+          System.out.printf("  move $a0 %s\n", a);
         System.out.println("  jal _heapAlloc");
         break;
       }
@@ -288,12 +294,33 @@ public class VM2M extends CommandLineLauncher.TextOutput {
     public void visit(VMemRead vmemread) throws Exception {
       VVarRef dest = vmemread.dest;
       VMemRef src = vmemread.source;
+      if(src instanceof VMemRef.Global) {
+        VMemRef.Global g = (VMemRef.Global) src;
+        String srcString = g.base.toString();
+        String destString = dest.toString();
+        int offset = g.byteOffset;
+        System.out.printf("  lw %s %d(%s)\n", destString, offset, srcString);
+      } else if(src instanceof VMemRef.Stack) {
+        VMemRef.Stack s = (VMemRef.Stack) src;
+        System.err.println(" I don't know!!!   " + vmemread.sourcePos.line);
+        assert(false);
+        //System.out.printf("  lw $t0 0($s0)\n", );
+      } else {
+        assert(false);
+      }
     }
 
     @Override
     public void visit(VMemWrite vmemwrite) throws Exception {
       VMemRef dest = vmemwrite.dest;
       VOperand src = vmemwrite.source;
+      if(dest instanceof VMemRef.Global) {
+
+      } else if(dest instanceof VMemRef.Stack) {
+
+      } else {
+        assert(false);
+      }
     }
 
     @Override

@@ -1,4 +1,4 @@
-FILE=BinaryTree
+FILE=Factorial
 
 vaporm:
 	javac -g VM2M.java
