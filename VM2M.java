@@ -195,11 +195,25 @@ public class VM2M extends CommandLineLauncher.TextOutput {
       }
 
       case "MulS": {
-        assert(!(args[0] instanceof VLitInt) || !(args[1] instanceof VLitInt));
-        String regName1 = args[0].toString();
-        String regName2 = args[1].toString();
-        String product = dest.toString();
-        System.out.printf("  mul %s %s %s\n", product, regName1, regName2);
+        if(args[0] instanceof VLitInt && !(args[1] instanceof VLitInt)) {
+          String regName1 = args[0].toString();
+          String regName2 = args[1].toString();
+          String product = dest.toString();
+          System.out.printf("  mul %s %s %s\n", product, regName2, regName1);
+        } else if(args[0] instanceof VLitInt && args[1] instanceof VLitInt) {
+          VLitInt intA = (VLitInt) args[0];
+          VLitInt intB = (VLitInt) args[1];
+          int a = intB.value;
+          int b = intA.value;
+          int mult = a*b;
+          String product = dest.toString();
+          System.out.printf("  li %s %d\n", product, mult);
+        } else {
+          String regName1 = args[0].toString();
+          String regName2 = args[1].toString();
+          String product = dest.toString();
+          System.out.printf("  mul %s %s %s\n", product, regName1, regName2);
+        }
         break;
       }
 
@@ -217,10 +231,12 @@ public class VM2M extends CommandLineLauncher.TextOutput {
         String regName2 = args[1].toString();
         String output   = dest.toString();
 
-        if(args[1] instanceof VLitInt) {
+        if(args[1] instanceof VLitInt && !(args[0] instanceof VLitInt)) {
           System.out.printf("  slti %s %s %s\n", output, regName1, regName2);
+        } else if(args[0] instanceof VLitInt) {
+          System.out.printf("  slti %s %s %s\n", output, regName2, regName1);
         } else {
-          System.out.printf("  slt %s %s %s\n", output, regName1, regName2);
+          System.out.printf("  sltu %s %s %s\n", output, regName1, regName2);
         }
         break;
       }
