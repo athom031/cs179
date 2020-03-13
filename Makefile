@@ -1,4 +1,4 @@
-FILE=LinearSearch
+FILE=BubbleSort
 
 vaporm:
 	javac -g VM2M.java

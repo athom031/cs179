@@ -239,7 +239,10 @@ public class VM2M extends CommandLineLauncher.TextOutput {
         if(args[1] instanceof VLitInt && !(args[0] instanceof VLitInt)) {
           System.out.printf("  sltu %s %s %s\n", output, regName1, regName2);
         } else if(args[0] instanceof VLitInt) {
-          System.out.printf("  sltu %s %s %s\n", output, regName2, regName1);
+          VLitInt intA = (VLitInt) args[0];
+          int value = intA.value;
+          System.out.printf("  li $t9 %d\n", value);
+          System.out.printf("  sltu %s $t9 %s\n", output, regName2);
         } else {
           System.out.printf("  sltu %s %s %s\n", output, regName1, regName2);
         }
