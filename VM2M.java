@@ -41,7 +41,7 @@ public class VM2M extends CommandLineLauncher.TextOutput {
       // go through each function.
       for(VFunction function : program.functions) {
         System.out.printf("%s:\n", function.ident);
-        int local = function.stack.local;
+        int local = function.stack.out;
         visitor.local = local;
         System.err.println("local: "+local);
 
@@ -317,13 +317,16 @@ public class VM2M extends CommandLineLauncher.TextOutput {
         int index = s.index * 4;
         switch(region) {
         case In:
-          //System.err.println("VMEMREAD IN");
+          System.err.println("VMEMREAD IN");
+          //System.out.println("VMEMREAD IN");
+          System.out.printf("  lw %s %d($fp)\n", destString, index);
           break;
         case Out:
-          //System.err.println("VMEMREAD OUT");
+          System.err.println("VMEMREAD OUT");
+          System.out.println("VMEMREAD OUT");
           break;
         case Local:
-          System.out.printf("  lw %s %d($sp)\n", destString, index, srcString);
+          System.out.printf("  lw %s %d($sp)\n", destString, index);
           break;
         }
       } else {
@@ -364,9 +367,16 @@ public class VM2M extends CommandLineLauncher.TextOutput {
         switch(region) {
         case In:
           System.err.println("VMEMWRITE IN");
+          System.out.println("VMEMWRITE OUT");
           break;
         case Out:
           System.err.println("VMEMWRITE OUT");
+          if(src instanceof VLitInt) {
+            System.out.printf("  li $t9 %s\n", srcString);
+            System.out.printf("  sw $t9 %d($sp)\n", index);
+          } else {
+            System.out.printf("  sw %s %d($sp)\n", srcString, index);
+          }
           break;
         case Local:
           System.out.printf("  sw %s %d($sp)\n", srcString, index);

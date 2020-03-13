@@ -1,4 +1,4 @@
-FILE=Factorial
+FILE=MoreThan4
 
 vaporm:
 	javac -g VM2M.java
