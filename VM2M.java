@@ -151,34 +151,84 @@ public class VM2M extends CommandLineLauncher.TextOutput {
 
       switch(op.name) {
       case "Add": {
+        assert(!(args[0] instanceof VLitInt));
+        String regName1 = args[0].toString();
+        if(args[1] instanceof VLitInt) {
+          String litNum = args[1].toString();
+          String sumReg = dest.toString();
+          System.out.printf("  addi %s, %s, %s\n", sumReg, regName1, litNum);
+        } else {
+          String regName2 = args[1].toString();
+          String sumReg = dest.toString();
+          System.out.printf("  add %s, %s, %s\n", sumReg, regName1, regName2);
+        }
         break;
       }
 
       case "Sub": {
+        // TODO: args[0] can be VLitInt as well as args[1]
+        assert(!(args[0] instanceof VLitInt) || !(args[1] instanceof VLitInt));
+        String regName1 = args[0].toString();
+        String regName2 = args[1].toString();
+        String diff = dest.toString();
+        System.out.printf("  sub %s, %s, %s\n", diff, regName1, regName2);
         break;
       }
 
       case "MulS": {
+        assert(!(args[0] instanceof VLitInt) || !(args[1] instanceof VLitInt));
+        String regName1 = args[0].toString();
+        String regName2 = args[1].toString();
+        String product = dest.toString();
+        System.out.printf("  mul %s, %s, %s\n", product, regName1, regName2);
         break;
       }
 
       case "Eq": {
+        String regName1 = args[0].toString();
+        String regName2 = args[1].toString();
+        String output   = dest.toString();
+        System.out.printf("  xor %s, %s, %s\n", output, regName1, regName2);
+        System.out.printf("  xor %s, %s, 1\n",  output, output);
         break;
       }
 
       case "Lt": {
+        String regName1 = args[0].toString();
+        String regName2 = args[1].toString();
+        String output   = dest.toString();
+
+        if(args[1] instanceof VLitInt) {
+          System.out.printf("  slti %s, %s, %s\n", output, regName1, regName2);
+        } else {
+          System.out.printf("  slt %s, %s, %s\n", output, regName1, regName2);
+        }
         break;
       }
 
       case "PrintIntS": {
+        String a = args[0].toString();
+        if(args[0] instanceof VLitInt)
+          System.out.printf("  li $a0, %s\n", a);
+        else
+          System.out.printf("  move $a0, %s\n", a);
+        System.out.println("  jal _print");
         break;
       }
 
       case "HeapAllocZ": {
+        String a = args[0].toString();
+        if(args[0] instanceof VLitInt)
+          System.out.printf("  li $a0, %s\n", a);
+        else
+          System.out.printf("  move $a0, %s\n", a);
+        System.out.println("  jal _heapAlloc");
         break;
       }
 
       case "Error": {
+        System.out.println("  la $a0 _str0");
+        System.out.println("  j _error");
         break;
       }
 
@@ -195,6 +245,36 @@ public class VM2M extends CommandLineLauncher.TextOutput {
       VAddr<VFunction> addr = vcall.addr;
       VOperand [] args = vcall.args;
       VVarRef.Local dest = vcall.dest;
+      String addrName = addr.toString();
+      int min = args.length<4? args.length : 4;
+      for(int i=0; i<min; i++) {
+        String argsString = args[i].toString();
+        if(args[i] instanceof VLitInt)
+          System.out.printf("  li $a%d %s\n", i, argsString);
+        else
+          System.out.printf("  move $a%d %s\n", i, argsString);
+      }
+      for(int i=4; i<args.length; i++) {
+        String argsString = args[i].toString();
+        int offset = (i-4)*4;
+        System.out.printf("  sw $t9 %d($sp)\n", offset);
+        if(args[i] instanceof VLitInt)
+          System.out.printf("  li $t9 %s\n", i, argsString);
+        else
+          System.out.printf("  move $t9 %s\n", i, argsString);
+      }
+      if(addr instanceof VAddr.Label) {
+        System.out.printf("  jal %s\n", addrName);
+      } else if(addr instanceof VAddr.Var) {
+        System.out.printf("  jalr %s\n", addrName);
+      } else {
+        assert(false);
+      }
+
+      if(dest != null) {
+        String retString = dest.toString();
+        System.out.printf("  move %s $v0\n", retString);
+      }
     }
 
     @Override
@@ -219,6 +299,15 @@ public class VM2M extends CommandLineLauncher.TextOutput {
     @Override
     public void visit(VReturn vreturn) throws Exception {
       VOperand value = vreturn.value;
+      if(value != null) {
+        String retString = value.toString();
+        if(value instanceof VLitInt) {
+          System.out.printf("  li $v0 %s\n", retString);
+        } else {
+          System.out.printf("  move $v0 %s\n", retString);
+        }
+      }
+      System.out.println("  jr $ra");
     }
 
   }
