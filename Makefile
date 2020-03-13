@@ -1,4 +1,4 @@
-FILE=MoreThan4
+FILE=MoreThan4.opt
 
 vaporm:
 	javac -g VM2M.java

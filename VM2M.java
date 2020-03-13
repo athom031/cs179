@@ -41,7 +41,7 @@ public class VM2M extends CommandLineLauncher.TextOutput {
       // go through each function.
       for(VFunction function : program.functions) {
         System.out.printf("%s:\n", function.ident);
-        int local = function.stack.out;
+        int local = Integer.max(function.stack.local, function.stack.out);
         visitor.local = local;
         System.err.println("local: "+local);
 
@@ -71,20 +71,20 @@ public class VM2M extends CommandLineLauncher.TextOutput {
       }
 
       System.out.println("_print:");
-      System.out.println("  li $v0 1");
+      System.out.println("  li $v0 1   # syscall: print integer");
       System.out.println("  syscall");
       System.out.println("  la $a0 _newline");
-      System.out.println("  li $v0 4");
+      System.out.println("  li $v0 4   # syscall: print string");
       System.out.println("  syscall");
       System.out.println("  jr $ra\n");
       System.out.println("_error:");
-      System.out.println("  li $v0 4");
+      System.out.println("  li $v0 4   # syscall: print string");
       System.out.println("  syscall");
-      System.out.println("  li $v0 10");
+      System.out.println("  li $v0 10  # syscall: exit");
       System.out.println("  syscall\n");
 
       System.out.println("_heapAlloc:");
-      System.out.println("  li $v0 9");
+      System.out.println("  li $v0 9   # syscall: sbrk");
       System.out.println("  syscall");
       System.out.println("  jr $ra\n");
 
@@ -123,10 +123,14 @@ public class VM2M extends CommandLineLauncher.TextOutput {
       VVarRef dest = vassign.dest;
       VOperand src = vassign.source;
       String destString = dest.toString();
-      String srcString = src.toString();
       if(src instanceof VLitInt) {
+       String srcString = src.toString();
         System.out.printf("  li %s %s\n", destString, srcString);
+      } else if(src instanceof VOperand.Static) {
+        String srcString = src.toString().substring(1);
+        System.out.printf("  la %s %s\n", destString, srcString);
       } else {
+        String srcString = src.toString();
         System.out.printf("  move %s %s\n", destString, srcString);
       }
     }
@@ -277,11 +281,12 @@ public class VM2M extends CommandLineLauncher.TextOutput {
       VAddr<VFunction> addr = vcall.addr;
       VOperand [] args = vcall.args;
       VVarRef.Local dest = vcall.dest;
-      String addrName = addr.toString();
       int min = args.length<4? args.length : 4;
       if(addr instanceof VAddr.Label) {
+        String addrName = addr.toString().substring(1);
         System.out.printf("  jal %s\n", addrName);
       } else if(addr instanceof VAddr.Var) {
+        String addrName = addr.toString();
         System.out.printf("  jalr %s\n", addrName);
       } else {
         assert(false);
@@ -323,7 +328,7 @@ public class VM2M extends CommandLineLauncher.TextOutput {
           break;
         case Out:
           System.err.println("VMEMREAD OUT");
-          System.out.println("VMEMREAD OUT");
+          //System.out.println("VMEMREAD OUT");
           break;
         case Local:
           System.out.printf("  lw %s %d($sp)\n", destString, index);
